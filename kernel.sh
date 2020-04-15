@@ -16,6 +16,8 @@ fi
 if [ $parse_branch == "aosp/gcc-lto" ]; then
     git clone --depth=1 --single-branch https://github.com/AOSPA/android_prebuilts_gcc_linux-x86_arm_arm-eabi -b master gcc32
     git clone --depth=1 --single-branch https://github.com/AOSPA/android_prebuilts_gcc_linux-x86_aarch64_aarch64-elf -b master gcc
+elif [[ $parse_branch == "HMP-vdso32" ]]; then
+    git clone --depth=1 --single-branch https://github.com/HANA-CI-Build-Project/proton-clang -b master clang
 else
     git clone --depth=1 --single-branch https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-6364210 clang
     git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r55 gcc32
@@ -65,6 +67,17 @@ if [ $parse_branch == "aosp/gcc-lto" ]; then
                             ARCH=arm64 \
                             CROSS_COMPILE="$GCC" \
                             CROSS_COMPILE_ARM32="$GCC32"
+    }
+elif [[ $parse_branch == "HMP-vdso32" ]]; then
+    tg_build() {
+      export LD_LIBRARY_PATH=$(pwd)/clang/bin/../lib:$PATH 
+      PATH=$(pwd)/clang/bin:$PATH \
+      make -j$(nproc --all) O=out \
+		            ARCH=arm64 \
+		            CC=clang \
+		            CLANG_TRIPLE=aarch64-linux-gnu- \
+		            CROSS_COMPILE=aarch64-linux-gnu- \
+		            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
     }
 else
     tg_build() {
@@ -121,7 +134,7 @@ build_diff=$(($build_end - $build_start))
 kernel_ver=$(cat $(pwd)/out/.config | grep Linux/arm64 | cut -d " " -f3)
 toolchain_ver=$(cat $(pwd)/out/include/generated/compile.h | grep LINUX_COMPILER | cut -d '"' -f2)
 tg_sendstick
-tg_channelcast "⚠️ <i>Warning: New build is available!</i> working on <b>$parse_branch</b> in <b>Linux $kernel_ver</b> using <b>$toolchain_ver</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b>.Build complete in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
+tg_channelcast "⚠️ <i>Warning: New build is available!</i> working on <b>$parse_branch</b> in <b>Linux $kernel_ver</b> using <b>$toolchain_ver</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b>. Build complete in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
 if [[ $parse_branch == "lavender" ]]; then
     curl -F document=@$pack/$product_name-lavender-new-blob-$date1.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
     curl -F document=@$pack/$product_name-lavender-old-blob-$date2.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
