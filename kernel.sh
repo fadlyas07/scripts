@@ -19,7 +19,6 @@ if [ $parse_branch == "aosp/gcc-lto" ]; then
 elif [[ $parse_branch == "HMP-vdso32" ]]; then
     git clone --depth=1 --single-branch https://github.com/HANA-CI-Build-Project/proton-clang -b master clang
 else
-    git clone --depth=1 --single-branch https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-6364210 clang
     git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r55 gcc32
     git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r55 gcc
 fi
@@ -81,11 +80,9 @@ elif [[ $parse_branch == "HMP-vdso32" ]]; then
     }
 else
     tg_build() {
-      PATH=$(pwd)/clang/bin:$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH \
+      PATH=$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH \
       make -j$(nproc --all) O=out \
 		            ARCH=arm64 \
-		            CC=clang \
-		            CLANG_TRIPLE=aarch64-linux-gnu- \
 		            CROSS_COMPILE=aarch64-linux-android- \
 		            CROSS_COMPILE_ARM32=arm-linux-androideabi-
     }
