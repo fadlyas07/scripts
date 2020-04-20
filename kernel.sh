@@ -118,6 +118,7 @@ if [[ ! -f "$kernel_img" ]]; then
 	tg_sendinfo "$product_name $device Build Failed!"
 	exit 1
 fi
+curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
 mv $kernel_img $pack/zImage
 cd $pack
 if [[ $parse_branch == "lavender" ]]; then
