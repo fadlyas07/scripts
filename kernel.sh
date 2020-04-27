@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Circle CI/CD - Simple kernel build script
-# Copyright (C) 2019 Raphielscape LLC (@raphielscape)
-# Copyright (C) 2019 Dicky Herlambang (@Nicklas373)
+# Copyright (C) 2019, 2020 Raphielscape LLC (@raphielscape)
+# Copyright (C) 2019, 2020 Dicky Herlambang (@Nicklas373)
 # Copyright (C) 2020 Muhammad Fadlyas (@fadlyas07)
 export parse_branch=$(git rev-parse --abbrev-ref HEAD)
 if [[ $parse_branch == "lavender" ]]; then
