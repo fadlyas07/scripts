@@ -62,31 +62,31 @@ if [ $parse_branch == "aosp/gcc-lto" ]; then
     tg_build() {
       export GCC="$(pwd)/gcc/bin/aarch64-elf-"
       export GCC32="$(pwd)/gcc32/bin/arm-eabi-"
-      make -j$(nproc --all) O=out \
-                            ARCH=arm64 \
-                            CROSS_COMPILE="$GCC" \
-                            CROSS_COMPILE_ARM32="$GCC32"
+      make -j$(nproc) O=out \
+                      ARCH=arm64 \
+                      CROSS_COMPILE="$GCC" \
+                      CROSS_COMPILE_ARM32="$GCC32"
     }
 elif [[ $parse_branch == "HMP-vdso32" ]]; then
     tg_build() {
       export LD_LIBRARY_PATH=$(pwd)/clang/bin/../lib:$PATH 
       PATH=$(pwd)/clang/bin:$PATH \
-      make -j$(nproc --all) O=out \
-		            ARCH=arm64 \
-		            CC=clang \
-		            CLANG_TRIPLE=aarch64-linux-gnu- \
-		            CROSS_COMPILE=aarch64-linux-gnu- \
-		            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+      make -j$(nproc) O=out \
+		      ARCH=arm64 \
+		      CC=clang \
+		      CLANG_TRIPLE=aarch64-linux-gnu- \
+		      CROSS_COMPILE=aarch64-linux-gnu- \
+		      CROSS_COMPILE_ARM32=arm-linux-gnueabi-
     }
 else
     tg_build() {
       PATH=$(pwd)/clang/bin:/root/gcc/bin:/root/gcc32/bin:$PATH \
-      make -j$(nproc --all) O=out \
-		            ARCH=arm64 \
-		            CC=clang \
-		            CLANG_TRIPLE=aarch64-linux-gnu- \
-		            CROSS_COMPILE=aarch64-linux-android- \
-		            CROSS_COMPILE_ARM32=arm-linux-androideabi-
+      make -j$(nproc) O=out \
+		      ARCH=arm64 \
+		      CC=clang \
+		      CLANG_TRIPLE=aarch64-linux-gnu- \
+		      CROSS_COMPILE=aarch64-linux-android- \
+		      CROSS_COMPILE_ARM32=arm-linux-androideabi-
     }
 fi
 date1=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
