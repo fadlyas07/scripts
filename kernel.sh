@@ -20,7 +20,8 @@ elif [[ $parse_branch == "HMP-vdso32" ]]; then
     git clone --depth=1 --single-branch https://github.com/HANA-CI-Build-Project/proton-clang -b master clang
 else
     git clone --depth=1 --single-branch https://github.com/crdroidmod/android_prebuilts_clang_host_linux-x86_clang-5331180 -b 9.0 clang
-    echo "GCC 4.9.x 20150123 ARCH64 & ARM32 already in /root/ directory"
+    git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r55 gcc
+    git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r55 gcc32
 fi
 git clone --depth=1 --single-branch https://github.com/fabianonline/telegram.sh telegram
 git clone --depth=1 --single-branch https://github.com/fadlyas07/anykernel-3
@@ -80,7 +81,7 @@ elif [[ $parse_branch == "HMP-vdso32" ]]; then
     }
 else
     tg_build() {
-      PATH=$(pwd)/clang/bin:/root/gcc/bin:/root/gcc32/bin:$PATH \
+      PATH=$(pwd)/clang/bin:$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH \
       make -j$(nproc) O=out \
 		      ARCH=arm64 \
 		      CC=clang \
