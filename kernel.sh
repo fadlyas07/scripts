@@ -19,7 +19,7 @@ if [ $parse_branch == "aosp/gcc-lto" ]; then
 elif [[ $parse_branch == "HMP-vdso32" ]]; then
     git clone --depth=1 --single-branch https://github.com/HANA-CI-Build-Project/proton-clang -b master clang
 else
-    git clone --depth=1 --single-branch https://github.com/crdroidmod/android_prebuilts_clang_host_linux-x86_clang-5900059 clang
+    git clone --depth=1 --single-branch https://github.com/crdroidmod/android_prebuilts_clang_host_linux-x86_clang-5331180 -b 9.0 clang
     echo "GCC 4.9.x 20150123 ARCH64 & ARM32 already in /root/ directory"
 fi
 git clone --depth=1 --single-branch https://github.com/fabianonline/telegram.sh telegram
