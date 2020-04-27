@@ -91,7 +91,7 @@ else
 fi
 date1=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
 make ARCH=arm64 O=out "$config_device1" && \
-tg_build 2>&1| tee build_kernel.log
+tg_build 2>&1| tee build.log
 mv *.log $TEMP
 if [[ ! -f "$kernel_img" ]]; then
 	curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
@@ -113,7 +113,7 @@ if [[ $parse_branch == "lavender" ]]; then
     git revert 4ab2eb2bd6389b776de2cf5a94e8c1eb96251e09 --no-commit
 fi
 make ARCH=arm64 O=out "$config_device2" && \
-tg_build 2>&1| tee build_kernel.log
+tg_build 2>&1| tee build.log
 mv *.log $TEMP
 if [[ ! -f "$kernel_img" ]]; then
 	curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
