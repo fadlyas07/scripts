@@ -32,8 +32,8 @@ export TELEGRAM_ID=$chat_id
 export TELEGRAM_TOKEN=$token
 export pack=$(pwd)/anykernel-3
 export product_name=GreenForce
-export KBUILD_BUILD_USER=$(git log --format='%H' -1)
-export KBUILD_BUILD_HOST=$(git log --format='%cn' -1)
+export KBUILD_BUILD_HOST=$(git log --format='%H' -1)
+export KBUILD_BUILD_USER=$(git log --format='%cn' -1)
 export kernel_img=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 build_start=$(date +"%s")
 
