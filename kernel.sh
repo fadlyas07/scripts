@@ -13,16 +13,11 @@ else
     export config_device1=rolex_defconfig
     export config_device2=riva_defconfig
 fi
-if [ $parse_branch == "aosp/gcc-lto" ]; then
-    git clone --depth=1 --single-branch https://github.com/AOSPA/android_prebuilts_gcc_linux-x86_arm_arm-eabi -b master gcc32
-    git clone --depth=1 --single-branch https://github.com/AOSPA/android_prebuilts_gcc_linux-x86_aarch64_aarch64-elf -b master gcc
-elif [[ $parse_branch == "HMP-vdso32" ]]; then
-    git clone --depth=1 --single-branch https://github.com/HANA-CI-Build-Project/proton-clang -b master clang
-else
+if ! [[ $parse_branch == "Eas-version" ]]; then
     git clone --depth=1 --single-branch https://github.com/crdroidmod/android_prebuilts_clang_host_linux-x86_clang-5331180 -b 9.0 clang
-    git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r55 gcc
-    git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r55 gcc32
 fi
+git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r55 gcc
+git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r55 gcc32
 git clone --depth=1 --single-branch https://github.com/fabianonline/telegram.sh telegram
 git clone --depth=1 --single-branch https://github.com/fadlyas07/anykernel-3
 mkdir $(pwd)/temp
@@ -51,33 +46,13 @@ tg_channelcast() {
 		done
 	)"
 }
-tg_sendinfo() {
-    "$TELEGRAM" -c "784548477" -H \
-	"$(
-		for POST in "$@"; do
-			echo "$POST"
-		done
-	)"
-}
-if [ $parse_branch == "aosp/gcc-lto" ]; then
+if [[ $parse_branch == "Eas-version" ]]; then
     tg_build() {
-      export GCC="$(pwd)/gcc/bin/aarch64-elf-"
-      export GCC32="$(pwd)/gcc32/bin/arm-eabi-"
+      PATH=$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH \
       make -j$(nproc) O=out \
                       ARCH=arm64 \
-                      CROSS_COMPILE="$GCC" \
-                      CROSS_COMPILE_ARM32="$GCC32"
-    }
-elif [[ $parse_branch == "HMP-vdso32" ]]; then
-    tg_build() {
-      export LD_LIBRARY_PATH=$(pwd)/clang/bin/../lib:$PATH 
-      PATH=$(pwd)/clang/bin:$PATH \
-      make -j$(nproc) O=out \
-		      ARCH=arm64 \
-		      CC=clang \
-		      CLANG_TRIPLE=aarch64-linux-gnu- \
-		      CROSS_COMPILE=aarch64-linux-gnu- \
-		      CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+                      CROSS_COMPILE=aarch64-linux-android- \
+                      CROSS_COMPILE_ARM32=arm-linux-androideabi-
     }
 else
     tg_build() {
@@ -92,14 +67,16 @@ else
 fi
 date1=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
 make ARCH=arm64 O=out "$config_device1" && \
-tg_build 2>&1| tee build.log
+tg_build 2>&1| tee $(TZ=Asia/Jakarta date +'%A-%H%M-%d%m%y').log
 mv *.log $TEMP
-if [[ ! -f "$kernel_img" ]]; then
-	curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
-	tg_sendinfo "$product_name $device Build Failed!"
-	exit 1
+if ! [[ -f "$kernel_img" ]]; then
+    build_end=$(date +"%s")
+    build_diff=$(($build_end - $build_start))
+    curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
+    tg_channelcast "<b>$product_name</b> for <b>$device</b> Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
+    exit 1
 fi
-curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
+curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
 mv $kernel_img $pack/zImage
 cd $pack
 if [[ $parse_branch == "lavender" ]]; then
@@ -114,14 +91,16 @@ if [[ $parse_branch == "lavender" ]]; then
     git revert 4ab2eb2bd6389b776de2cf5a94e8c1eb96251e09 --no-commit
 fi
 make ARCH=arm64 O=out "$config_device2" && \
-tg_build 2>&1| tee build.log
+tg_build 2>&1| tee $(TZ=Asia/Jakarta date +'%A-%H%M-%d%m%y').log
 mv *.log $TEMP
-if [[ ! -f "$kernel_img" ]]; then
-	curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
-	tg_sendinfo "$product_name $device Build Failed!"
-	exit 1
+if ! [[ -f "$kernel_img" ]]; then
+    build_end=$(date +"%s")
+    build_diff=$(($build_end - $build_start))
+    curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
+    tg_channelcast "<b>$product_name</b> for <b>$device</b> Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
+    exit 1
 fi
-curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
+curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
 mv $kernel_img $pack/zImage
 cd $pack
 if [[ $parse_branch == "lavender" ]]; then
