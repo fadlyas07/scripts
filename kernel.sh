@@ -14,7 +14,7 @@ else
     export config_device2=riva_defconfig
 fi
 if ! [[ $parse_branch == "Eas-version" ]]; then
-    git clone --depth=1 --single-branch https://github.com/crdroidmod/android_prebuilts_clang_host_linux-x86_clang-5331180 -b 9.0 clang
+    git clone --depth=1 --single-branch https://github.com/fadlyas07/android_prebuilts_clang_host_linux-x86_clang-r383902 -b 10.0 clang
 fi
 git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r55 gcc
 git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r55 gcc32
