@@ -13,11 +13,7 @@ else
     export config_device1=rolex_defconfig
     export config_device2=riva_defconfig
 fi
-if ! [[ $parse_branch == "Eas-version" ]]; then
-    git clone --depth=1 --single-branch https://github.com/fadlyas07/android_prebuilts_clang_host_linux-x86_clang-r383902 -b 10.0 clang
-fi
-git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r55 gcc
-git clone --depth=1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r55 gcc32
+git clone --depth=1 --single-branch https://github.com/kdrag0n/proton-clang clang
 git clone --depth=1 --single-branch https://github.com/fabianonline/telegram.sh telegram
 git clone --depth=1 --single-branch https://github.com/fadlyas07/anykernel-3
 mkdir $(pwd)/temp
@@ -46,25 +42,19 @@ tg_channelcast() {
 		done
 	)"
 }
-if [[ $parse_branch == "Eas-version" ]]; then
-    tg_build() {
-      PATH=$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH \
-      make -j$(nproc) O=out \
-                      ARCH=arm64 \
-                      CROSS_COMPILE=aarch64-linux-android- \
-                      CROSS_COMPILE_ARM32=arm-linux-androideabi-
-    }
-else
-    tg_build() {
-      PATH=$(pwd)/clang/bin:$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH \
-      make -j$(nproc) O=out \
-		      ARCH=arm64 \
-		      CC=clang \
-		      CLANG_TRIPLE=aarch64-linux-gnu- \
-		      CROSS_COMPILE=aarch64-linux-android- \
-		      CROSS_COMPILE_ARM32=arm-linux-androideabi-
-    }
-fi
+tg_build() {
+PATH=$(pwd)/clang/bin:$PATH \
+make -j$(nproc) O=out \
+                ARCH=arm64 \
+                AR=llvm-ar \
+                CC=clang \
+                CROSS_COMPILE=aarch64-linux-gnu- \
+                CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+                NM=llvm-nm \
+                OBJCOPY=llvm-objcopy \
+                OBJDUMP=llvm-objdump \
+                STRIP=llvm-strip
+}
 date1=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
 make ARCH=arm64 O=out "$config_device1" && \
 tg_build 2>&1| tee $(TZ=Asia/Jakarta date +'%A-%H%M-%d%m%y').log
