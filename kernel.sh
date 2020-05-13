@@ -13,7 +13,7 @@ else
     export config_device1=rolex_defconfig
     export config_device2=riva_defconfig
 fi
-git clone --depth=1 --single-branch https://github.com/kdrag0n/proton-clang clang
+git clone --depth=1 --single-branch https://github.com/kdrag0n/proton-clang
 git clone --depth=1 --single-branch https://github.com/fabianonline/telegram.sh telegram
 git clone --depth=1 --single-branch https://github.com/fadlyas07/anykernel-3
 mkdir $(pwd)/temp
@@ -43,7 +43,7 @@ tg_channelcast() {
 	)"
 }
 tg_build() {
-PATH=$(pwd)/clang/bin:$PATH \
+PATH=$(pwd)/proton-clang/bin:$PATH \
 make -j$(nproc) O=out \
                 ARCH=arm64 \
                 AR=llvm-ar \
