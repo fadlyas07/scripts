@@ -43,7 +43,8 @@ tg_channelcast() {
 		for POST in "$@"; do
 			echo "$POST"
 		done
-	)"
+	)" \
+    -t $TELEGRAM_TOKEN
 }
 tg_build() {
 PATH=$(pwd)/proton-clang/bin:$PATH \
