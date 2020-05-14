@@ -66,7 +66,7 @@ if ! [[ -f "$kernel_img" ]]; then
     tg_channelcast "<b>$product_name</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
     exit 1
 fi
-curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
+curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
 mv $kernel_img $pack/zImage
 cd $pack
 if [[ $parse_branch == "lavender" ]]; then
@@ -90,7 +90,7 @@ if ! [[ -f "$kernel_img" ]]; then
     tg_channelcast "<b>$product_name</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
     exit 1
 fi
-curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
+curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
 mv $kernel_img $pack/zImage
 cd $pack
 if [[ $parse_branch == "lavender" ]]; then
