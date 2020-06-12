@@ -3,39 +3,41 @@
 # Copyright (C) 2019, 2020, Raphielscape LLC (@raphielscape)
 # Copyright (C) 2019, 2020, Dicky Herlambang (@Nicklas373)
 # Copyright (C) 2020, Muhammad Fadlyas (@fadlyas07)
+export parse_branch=$(git rev-parse --abbrev-ref HEAD)
 export config_path=$(pwd)/arch/arm64/configs
 if [[ -e $config_path/lavender-perf_defconfig ]]; then
     export device="Xiaomi Redmi Note 7/7S"
     export config_device1=lavender-perf_defconfig
     export config_device2=lavender-perf_defconfig
 elif [[ -e $config_path/ugglite_defconfig ]]; then
-    export device="Xiaomi Redmi Note 5A"
+    export device="Xiaomi Redmi Note 5A Lite"
     export config_device1=ugglite_defconfig
 elif [[ -e $config_path/rolex_defconfig || $config_path/riva_defconfig ]]; then
     export device="Xiaomi Redmi 4A/5A"
     export config_device1=rolex_defconfig
     export config_device2=riva_defconfig
 fi
-wget https://releases.linaro.org/components/toolchain/binaries/latest-6/aarch64-elf/gcc-linaro-6.5.0-2018.12-x86_64_aarch64-elf.tar.xz
-tar -xf gcc-linaro-6.5.0-2018.12-x86_64_aarch64-elf.tar.xz
-mv gcc-linaro-6.5.0-2018.12-x86_64_aarch64-elf gcc && rm -rf gcc-linaro-6.5.0-2018.12-x86_64_aarch64-elf.tar.xz
-wget https://releases.linaro.org/components/toolchain/binaries/latest-6/arm-eabi/gcc-linaro-6.5.0-2018.12-x86_64_arm-eabi.tar.xz
-tar -xf gcc-linaro-6.5.0-2018.12-x86_64_arm-eabi.tar.xz
-mv gcc-linaro-6.5.0-2018.12-x86_64_arm-eabi gcc32 && rm -rf gcc-linaro-6.5.0-2018.12-x86_64_arm-eabi.tar.xz
-git clone --quiet --depth=1 --single-branch https://github.com/fabianonline/telegram.sh telegram
-git clone --quiet --depth=1 --single-branch https://github.com/fadlyas07/anykernel-3
+git clone --depth=1 https://github.com/fadlyas07/anykernel-3
+git clone --depth=1 https://github.com/fabianonline/telegram.sh telegram
+git clone --depth=1 https://github.com/kdrag0n/proton-clang
 mkdir $(pwd)/temp
 export ARCH=arm64
 export TEMP=$(pwd)/temp
-export TELEGRAM_ID=$chat_id
 export TELEGRAM_TOKEN=$token
 export pack=$(pwd)/anykernel-3
 export product_name=GreenForce
-export parse_branch=$(git rev-parse --abbrev-ref HEAD)
-export KBUILD_BUILD_HOST=$(git log --format='%H' -1)
-export KBUILD_BUILD_USER=$(git log --format='%cn' -1)
+export KBUILD_BUILD_USER=Mhmmdfadlyas
+export KBUILD_BUILD_HOST=LucidDreams
 export kernel_img=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
-
+case $parse_branch in
+        *"android-3.18"*)
+                echo -e "Reset channel id to my id"
+                touch $chat_id
+                unset chat_id
+                export chat_id="784548477"
+        ;;
+esac
+export TELEGRAM_ID=$chat_id
 tg_sendstick() {
    curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendSticker" \
 	-d sticker="CAACAgUAAxkBAAEYl9pee0jBz-DdWSsy7Rik8lwWE6LARwACmQEAAn1Cwy4FwzpKLPPhXRgE" \
@@ -49,48 +51,58 @@ tg_channelcast() {
     )"
 }
 tg_build() {
-PATH=$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH \
+PATH=$(pwd)/proton-clang/bin:$PATH \
 make -j$(nproc) O=out \
                 ARCH=arm64 \
-                CROSS_COMPILE=aarch64-elf- \
-                CROSS_COMPILE_ARM32=arm-eabi-
+                AR=llvm-ar \
+                CC=clang \
+                CROSS_COMPILE=aarch64-linux-gnu- \
+                CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+                NM=llvm-nm \
+                OBJCOPY=llvm-objcopy \
+                OBJDUMP=llvm-objdump \
+                STRIP=llvm-strip
 }
 build_start=$(date +"%s")
 date1=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
 make ARCH=arm64 O=out "$config_device1" && \
-tg_build 2>&1| tee Log-$(TZ=Asia/Jakarta date +'%A-%H%M-%d%m%y').log
+tg_build 2>&1| tee Log-$(TZ=Asia/Jakarta date +'%H%M-%d%m%y').log
 mv *.log $TEMP
 if ! [[ -f "$kernel_img" ]]; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start))
-    curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
-    tg_channelcast "<b>$product_name</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
+    grep -iE 'not defined|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
+    curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
+    curl -F document=@$(echo $TEMP/*.txt) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
+    tg_channelcast "<b>$product_name</b> for <b>$device</b> on branch '<b>$parse_branch</b>' Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
     exit 1
 fi
 curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
 mv $kernel_img $pack/zImage && cd $pack
 if [[ $device = "Xiaomi Redmi Note 7/7S" ]]; then
     zip -r9q $product_name-lavender-new-blob-$date1.zip * -x .git README.md LICENCE $(echo *.zip)
-elif [[ $device = "Xiaomi Redmi Note 5A" ]]; then
+elif [[ $device = "Xiaomi Redmi Note 5A Lite" ]]; then
     zip -r9q $product_name-ugglite-$date1.zip * -x .git README.md LICENCE $(echo *.zip)
 elif [[ $device = "Xiaomi Redmi 4A/5A" ]]; then
     zip -r9q $product_name-rolex-$date1.zip * -x .git README.md LICENCE $(echo *.zip)
 fi
 cd ..
+if ! [[ $device = "Xiaomi Redmi Note 5A Lite" ]]; then
 rm -rf out/ $TEMP/*.log $pack/zImage
-if ! [[ $device = "Xiaomi Redmi Note 5A" ]]; then
 date2=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
 if [[ $device = "Xiaomi Redmi Note 7/7S" ]]; then
     git revert 4ab2eb2bd6389b776de2cf5a94e8c1eb96251e09 --no-commit
 fi
 make ARCH=arm64 O=out "$config_device2" && \
-tg_build 2>&1| tee Log-$(TZ=Asia/Jakarta date +'%A-%H%M-%d%m%y').log
+tg_build 2>&1| tee Log-$(TZ=Asia/Jakarta date +'%H%M-%d%m%y').log
 mv *.log $TEMP
 if ! [[ -f "$kernel_img" ]]; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start))
-    curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
-    tg_channelcast "<b>$product_name</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
+    grep -iE 'not defined|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
+    curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
+    curl -F document=@$(echo $TEMP/*.txt) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
+    tg_channelcast "<b>$product_name</b> for <b>$device</b> on branch '<b>$parse_branch</b>' Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
     exit 1
 fi
 curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
@@ -107,11 +119,11 @@ build_diff=$(($build_end - $build_start))
 kernel_ver=$(cat $(pwd)/out/.config | grep Linux/arm64 | cut -d " " -f3)
 toolchain_ver=$(cat $(pwd)/out/include/generated/compile.h | grep LINUX_COMPILER | cut -d '"' -f2)
 tg_sendstick
-tg_channelcast "⚠️ <i>Warning: New build is available!</i> working on <b>$parse_branch</b> in <b>Linux $kernel_ver</b> using <b>$toolchain_ver</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b>. Build complete in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
+tg_channelcast "⚠️ <i>Warning: New build is available!</i> working on <b>$parse_branch</b> in <b>Linux $kernel_ver</b> using <b>$toolchain_ver</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> build complete in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
 if [[ $device = "Xiaomi Redmi Note 7/7S" ]]; then
     curl -F document=@$pack/$product_name-lavender-new-blob-$date1.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
     curl -F document=@$pack/$product_name-lavender-old-blob-$date2.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
-elif [[ $device = "Xiaomi Redmi Note 5A" ]]; then
+elif [[ $device = "Xiaomi Redmi Note 5A Lite" ]]; then
     curl -F document=@$pack/$product_name-ugglite-$date1.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
 elif [[ $device = "Xiaomi Redmi 4A/5A" ]]; then
     curl -F document=@$pack/$product_name-rolex-$date1.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
