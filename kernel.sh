@@ -5,11 +5,7 @@
 # Copyright (C) 2020, Muhammad Fadlyas (@fadlyas07)
 export parse_branch=$(git rev-parse --abbrev-ref HEAD)
 export config_path=$(pwd)/arch/arm64/configs
-if [[ -e $config_path/lavender-perf_defconfig ]]; then
-    export device="Xiaomi Redmi Note 7/7S"
-    export config_device1=lavender-perf_defconfig
-    export config_device2=lavender-perf_defconfig
-elif [[ -e $config_path/ugglite_defconfig ]]; then
+if [[ -e $config_path/ugglite_defconfig ]]; then
     export device="Xiaomi Redmi Note 5A Lite"
     export config_device1=ugglite_defconfig
 elif [[ -e $config_path/rolex_defconfig || $config_path/riva_defconfig ]]; then
@@ -77,9 +73,7 @@ if ! [[ -f "$kernel_img" ]]; then
 fi
 curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
 mv $kernel_img $pack/zImage && cd $pack
-if [[ $device = "Xiaomi Redmi Note 7/7S" ]]; then
-    zip -r9q $product_name-lavender-new-blob-$date1.zip * -x .git README.md LICENCE $(echo *.zip)
-elif [[ $device = "Xiaomi Redmi Note 5A Lite" ]]; then
+if [[ $device = "Xiaomi Redmi Note 5A Lite" ]]; then
     zip -r9q $product_name-ugglite-$date1.zip * -x .git README.md LICENCE $(echo *.zip)
 elif [[ $device = "Xiaomi Redmi 4A/5A" ]]; then
     zip -r9q $product_name-rolex-$date1.zip * -x .git README.md LICENCE $(echo *.zip)
@@ -88,9 +82,6 @@ cd ..
 if ! [[ $device = "Xiaomi Redmi Note 5A Lite" ]]; then
 rm -rf out/ $TEMP/*.log $pack/zImage
 date2=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
-if [[ $device = "Xiaomi Redmi Note 7/7S" ]]; then
-    git revert 4ab2eb2bd6389b776de2cf5a94e8c1eb96251e09 --no-commit
-fi
 make ARCH=arm64 O=out "$config_device2" && \
 tg_build 2>&1| tee Log-$(TZ=Asia/Jakarta date +'%d%m%y').log
 mv *.log $TEMP
@@ -105,9 +96,7 @@ if ! [[ -f "$kernel_img" ]]; then
 fi
 curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
 mv $kernel_img $pack/zImage && cd $pack
-if [[ $device = "Xiaomi Redmi Note 7/7S" ]]; then
-    zip -r9q $product_name-lavender-old-blob-$date2.zip * -x .git README.md LICENCE $(echo *.zip)
-elif [[ $device = "Xiaomi Redmi 4A/5A" ]]; then
+if [[ $device = "Xiaomi Redmi 4A/5A" ]]; then
     zip -r9q $product_name-riva-$date2.zip * -x .git README.md LICENCE $(echo *.zip)
 fi
 cd ..
@@ -118,10 +107,7 @@ kernel_ver=$(cat $(pwd)/out/.config | grep Linux/arm64 | cut -d " " -f3)
 toolchain_ver=$(cat $(pwd)/out/include/generated/compile.h | grep LINUX_COMPILER | cut -d '"' -f2)
 tg_sendstick
 tg_channelcast "⚠️ <i>Warning: New build is available!</i> working on <b>$parse_branch</b> in <b>Linux $kernel_ver</b> using <b>$toolchain_ver</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> build complete in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
-if [[ $device = "Xiaomi Redmi Note 7/7S" ]]; then
-    curl -F document=@$pack/$product_name-lavender-new-blob-$date1.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
-    curl -F document=@$pack/$product_name-lavender-old-blob-$date2.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
-elif [[ $device = "Xiaomi Redmi Note 5A Lite" ]]; then
+if [[ $device = "Xiaomi Redmi Note 5A Lite" ]]; then
     curl -F document=@$pack/$product_name-ugglite-$date1.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
 elif [[ $device = "Xiaomi Redmi 4A/5A" ]]; then
     curl -F document=@$pack/$product_name-rolex-$date1.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"

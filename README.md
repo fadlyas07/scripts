@@ -4,8 +4,7 @@
 
 # This script is available for:
 1. Xiaomi Redmi 4A/5A
-2. Xiaomi Redmi Note 7/7S
-3. Xiaomi Redmi Note 5A Lite
+2. Xiaomi Redmi Note 5A Lite
 
 # How To use this script
 ~~~
