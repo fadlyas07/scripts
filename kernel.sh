@@ -19,7 +19,9 @@ elif [[ -e $config_path/rolex_defconfig || $config_path/riva_defconfig ]]; then
 fi
 git clone --depth=1 https://github.com/fadlyas07/anykernel-3
 git clone --depth=1 https://github.com/fabianonline/telegram.sh telegram
-git clone --depth=1 https://github.com/kdrag0n/proton-clang
+git clone --depth=1 https://github.com/crdroidmod/android_prebuilts_clang_host_linux-x86_clang-6317467 cclang
+git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r57 gcc32
+git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r57 gcc
 mkdir $(pwd)/temp
 export ARCH=arm64
 export TEMP=$(pwd)/temp
@@ -30,7 +32,7 @@ export KBUILD_BUILD_USER=Mhmmdfadlyas
 export KBUILD_BUILD_HOST=LucidDreams
 export kernel_img=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 case $parse_branch in
-        *"android-3.18"*)
+        *"android"*)
                 echo -e "Reset channel id to my id"
                 touch $chat_id
                 unset chat_id
@@ -51,27 +53,23 @@ tg_channelcast() {
     )"
 }
 tg_build() {
-PATH=$(pwd)/proton-clang/bin:$PATH \
+PATH=$(pwd)/cclang/bin:$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH \
 make -j$(nproc) O=out \
                 ARCH=arm64 \
-                AR=llvm-ar \
                 CC=clang \
-                CROSS_COMPILE=aarch64-linux-gnu- \
-                CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-                NM=llvm-nm \
-                OBJCOPY=llvm-objcopy \
-                OBJDUMP=llvm-objdump \
-                STRIP=llvm-strip
+                CLANG_TRIPLE=aarch64-linux-gnu- \
+                CROSS_COMPILE=aarch64-linux-android- \
+                CROSS_COMPILE_ARM32=arm-linux-androideabi-
 }
 build_start=$(date +"%s")
 date1=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
 make ARCH=arm64 O=out "$config_device1" && \
-tg_build 2>&1| tee Log-$(TZ=Asia/Jakarta date +'%H%M-%d%m%y').log
+tg_build 2>&1| tee Log-$(TZ=Asia/Jakarta date +'%d%m%y').log
 mv *.log $TEMP
 if ! [[ -f "$kernel_img" ]]; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start))
-    grep -iE 'not defined|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
+    grep -iE 'not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
     curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
     curl -F document=@$(echo $TEMP/*.txt) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
     tg_channelcast "<b>$product_name</b> for <b>$device</b> on branch '<b>$parse_branch</b>' Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
@@ -94,12 +92,12 @@ if [[ $device = "Xiaomi Redmi Note 7/7S" ]]; then
     git revert 4ab2eb2bd6389b776de2cf5a94e8c1eb96251e09 --no-commit
 fi
 make ARCH=arm64 O=out "$config_device2" && \
-tg_build 2>&1| tee Log-$(TZ=Asia/Jakarta date +'%H%M-%d%m%y').log
+tg_build 2>&1| tee Log-$(TZ=Asia/Jakarta date +'%d%m%y').log
 mv *.log $TEMP
 if ! [[ -f "$kernel_img" ]]; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start))
-    grep -iE 'not defined|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
+    grep -iE 'not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
     curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
     curl -F document=@$(echo $TEMP/*.txt) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
     tg_channelcast "<b>$product_name</b> for <b>$device</b> on branch '<b>$parse_branch</b>' Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
