@@ -1,4 +1,4 @@
-# My personal script for building android kernel
+# My personal script for building an android kernel
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/67872c64be394896b484d45a6d70b202)](https://www.codacy.com/manual/fadlyas07/Scripts?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=fadlyas07/Scripts&amp;utm_campaign=Badge_Grade)
 

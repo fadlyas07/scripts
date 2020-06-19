@@ -14,25 +14,25 @@ elif [[ -e $config_path/rolex_defconfig || $config_path/riva_defconfig ]]; then
     export config_device2=riva_defconfig
 fi
 git clone --depth=1 https://github.com/fadlyas07/anykernel-3
+git clone --depth=1 https://github.com/fadlyas07/clang-11.0.0 -b master gf-clang
 git clone --depth=1 https://github.com/fabianonline/telegram.sh telegram
-git clone --depth=1 https://github.com/crdroidmod/android_prebuilts_clang_host_linux-x86_clang-6317467 cclang
-git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r57 gcc32
-git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r57 gcc
 mkdir $(pwd)/temp
 export ARCH=arm64
 export TEMP=$(pwd)/temp
 export TELEGRAM_TOKEN=$token
 export pack=$(pwd)/anykernel-3
 export product_name=GreenForce
-export KBUILD_BUILD_USER=Mhmmdfadlyas
-export KBUILD_BUILD_HOST=LucidDreams
+export KBUILD_BUILD_USER=MhmmdFadlyas
+export KBUILD_BUILD_HOST=WestJava-Indonesia
 export kernel_img=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 case $parse_branch in
         *"android"*)
-                echo -e "Reset channel id to my id"
                 touch $chat_id
                 unset chat_id
                 export chat_id="784548477"
+                rm -rf gf-clang
+                git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r57 gcc
+                git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r57 gcc32
         ;;
 esac
 export TELEGRAM_ID=$chat_id
@@ -48,15 +48,30 @@ tg_channelcast() {
            done
     )"
 }
-tg_build() {
-PATH=$(pwd)/cclang/bin:$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH \
-make -j$(nproc) O=out \
-                ARCH=arm64 \
-                CC=clang \
-                CLANG_TRIPLE=aarch64-linux-gnu- \
-                CROSS_COMPILE=aarch64-linux-android- \
-                CROSS_COMPILE_ARM32=arm-linux-androideabi-
-}
+if [[ $parse_branch = android-3.18 ]]; then
+    tg_build() {
+      PATH=$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH \
+        make -j$(nproc) O=out \
+                        ARCH=arm64 \
+                        CROSS_COMPILE=aarch64-linux-android- \
+                        CROSS_COMPILE_ARM32=arm-linux-androideabi-
+    }
+else
+    tg_build() {
+      export LD_LIBRARY_PATH=$(pwd)/gf-clang/bin/../lib:$PATH
+        PATH=$(pwd)/gf-clang/bin:$PATH \
+          make -j$(nproc) O=out \
+                          ARCH=arm64 \
+                          AR=llvm-ar \
+                          CC=clang \
+                          CROSS_COMPILE=aarch64-linux-gnu- \
+                          CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+                          NM=llvm-nm \
+                          OBJCOPY=llvm-objcopy \
+                          OBJDUMP=llvm-objdump \
+                          STRIP=llvm-strip
+    }
+fi
 build_start=$(date +"%s")
 date1=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
 make ARCH=arm64 O=out "$config_device1" && \
@@ -65,7 +80,7 @@ mv *.log $TEMP
 if ! [[ -f "$kernel_img" ]]; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start))
-    grep -iE 'not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
+    grep -iE 'un|declare|not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
     curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
     curl -F document=@$(echo $TEMP/*.txt) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
     tg_channelcast "<b>$product_name</b> for <b>$device</b> on branch '<b>$parse_branch</b>' Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
@@ -88,7 +103,7 @@ mv *.log $TEMP
 if ! [[ -f "$kernel_img" ]]; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start))
-    grep -iE 'not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
+    grep -iE 'un|declare|not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
     curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
     curl -F document=@$(echo $TEMP/*.txt) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
     tg_channelcast "<b>$product_name</b> for <b>$device</b> on branch '<b>$parse_branch</b>' Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
