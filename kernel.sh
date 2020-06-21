@@ -14,7 +14,12 @@ elif [[ -e $config_path/rolex_defconfig || $config_path/riva_defconfig ]]; then
     export config_device2=riva_defconfig
 fi
 git clone --depth=1 https://github.com/fadlyas07/anykernel-3
-git clone --depth=1 https://github.com/fadlyas07/clang-11.0.0 -b master gf-clang
+if [[ $parse_branch = android-3.18 ]]; then
+    git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r57 gcc
+    git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r57 gcc32
+else
+    git clone --depth=1 https://github.com/fadlyas07/clang-11.0.0 -b master gf-clang
+fi
 git clone --depth=1 https://github.com/fabianonline/telegram.sh telegram
 mkdir $(pwd)/temp
 export ARCH=arm64
@@ -26,13 +31,10 @@ export KBUILD_BUILD_USER=MhmmdFadlyas
 export KBUILD_BUILD_HOST=WestJava-Indonesia
 export kernel_img=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 case $parse_branch in
-        *"android"*)
+        **)
                 touch $chat_id
                 unset chat_id
                 export chat_id="784548477"
-                rm -rf gf-clang
-                git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r57 gcc
-                git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r57 gcc32
         ;;
 esac
 export TELEGRAM_ID=$chat_id
