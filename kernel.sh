@@ -31,7 +31,7 @@ export KBUILD_BUILD_USER=MhmmdFadlyas
 export KBUILD_BUILD_HOST=WestJava-Indonesia
 export kernel_img=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 case $parse_branch in
-        **)
+        *"android"*)
                 touch $chat_id
                 unset chat_id
                 export chat_id="784548477"
@@ -82,7 +82,7 @@ mv *.log $TEMP
 if ! [[ -f "$kernel_img" ]]; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start))
-    grep -iE 'un|declare|not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
+    grep -iE 'not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
     curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
     curl -F document=@$(echo $TEMP/*.txt) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
     tg_channelcast "<b>$product_name</b> for <b>$device</b> on branch '<b>$parse_branch</b>' Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
@@ -105,7 +105,7 @@ mv *.log $TEMP
 if ! [[ -f "$kernel_img" ]]; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start))
-    grep -iE 'un|declare|not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
+    grep -iE 'not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $TEMP/*.log)" &> "$TEMP/trimmed_log.txt"
     curl -F document=@$(echo $TEMP/*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
     curl -F document=@$(echo $TEMP/*.txt) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
     tg_channelcast "<b>$product_name</b> for <b>$device</b> on branch '<b>$parse_branch</b>' Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
