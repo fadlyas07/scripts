@@ -131,8 +131,8 @@ toolchain_ver=$(cat $(pwd)/out/include/generated/compile.h | grep LINUX_COMPILER
 tg_sendstick
 tg_channelcast "⚠️ <i>Warning: New build is available!</i> working on <b>$parse_branch</b> in <b>Linux $kernel_ver</b> using <b>$toolchain_ver</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> build complete in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
 if [[ $device = "Xiaomi Redmi Note 5A Lite" ]]; then
-    curl -F document=@$pack/$product_name-ugglite-$date1.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="MD5 Checksum : <b>"$(echo $pack/*ugglite*.zip)" | cut -d' ' -f1)</b>"
+    curl -F document=@$pack/$product_name-ugglite-$date1.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="MD5 Checksum : <b>"$(md5sum $(echo $pack/*ugglite*.zip)" | cut -d' ' -f1)</b>"
 elif [[ $device = "Xiaomi Redmi 4A/5A" ]]; then
-    curl -F document=@$pack/$product_name-rolex-$date1.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="MD5 Checksum : <b>"$(echo $pack/*rolex*.zip)" | cut -d' ' -f1)</b>"
-    curl -F document=@$pack/$product_name-riva-$date2.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="MD5 Checksum : <b>"$(echo $pack/*riva*.zip)" | cut -d' ' -f1)</b>"
+    curl -F document=@$pack/$product_name-rolex-$date1.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="MD5 Checksum : <b>"$(md5sum $(echo $pack/*rolex*.zip)" | cut -d' ' -f1)</b>"
+    curl -F document=@$pack/$product_name-riva-$date2.zip "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="MD5 Checksum : <b>"$(md5sum $(echo $pack/*riva*.zip)" | cut -d' ' -f1)</b>"
 fi
