@@ -14,12 +14,7 @@ elif [[ -e $config_path/rolex_defconfig || $config_path/riva_defconfig ]]; then
     export config_device2=riva_defconfig
 fi
 git clone --depth=1 https://github.com/fadlyas07/anykernel-3
-if [[ $parse_branch = android-3.18 ]]; then
-    git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r57 gcc
-    git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r57 gcc32
-else
-    git clone --depth=1 https://github.com/fadlyas07/clang-11.0.0 -b master gf-clang
-fi
+git clone --depth=1 https://github.com/fadlyas07/clang-11.0.0 -b master gf-clang
 git clone --depth=1 https://github.com/fabianonline/telegram.sh telegram
 mkdir $(pwd)/temp
 export ARCH=arm64
@@ -52,32 +47,21 @@ tg_channelcast()
            done
     )"
 }
-if [[ $parse_branch = android-3.18 ]]; then
-    tg_build()
-    {
-      PATH=$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH \
-      make -j$(nproc) O=out \
-      ARCH=arm64 \
-      CROSS_COMPILE=aarch64-linux-android- \
-      CROSS_COMPILE_ARM32=arm-linux-androideabi-
-    }
-else
-    tg_build()
-    {
-      export LD_LIBRARY_PATH=$(pwd)/gf-clang/bin/../lib:$PATH
-      PATH=$(pwd)/gf-clang/bin:$PATH \
-      make -j$(nproc) O=out \
-      ARCH=arm64 \
-      AR=llvm-ar \
-      CC=clang \
-      CROSS_COMPILE=aarch64-linux-gnu- \
-      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-      NM=llvm-nm \
-      OBJCOPY=llvm-objcopy \
-      OBJDUMP=llvm-objdump \
-      STRIP=llvm-strip
-    }
-fi
+tg_build()
+{
+export LD_LIBRARY_PATH=$(pwd)/gf-clang/bin/../lib:$PATH
+PATH=$(pwd)/gf-clang/bin:$PATH \
+make -j$(nproc) O=out \
+ARCH=arm64 \
+AR=llvm-ar \
+CC=clang \
+CROSS_COMPILE=aarch64-linux-gnu- \
+CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+NM=llvm-nm \
+OBJCOPY=llvm-objcopy \
+OBJDUMP=llvm-objdump \
+STRIP=llvm-strip
+}
 build_start=$(date +"%s")
 date1=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
 make ARCH=arm64 O=out "$config_device1" && \
