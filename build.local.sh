@@ -145,6 +145,7 @@ if [ $choice = "1" ]; then
         echo -ne "                            BUILD FAILED!                           "
         echo -e ""
         echo -e "##-------------------------------##-------------------------------##"
+        echo -e "Open trimmed_log.txt to see that error"
       exit 1
     fi
     rm -rf Log*.log
@@ -165,7 +166,7 @@ if [ $choice = "2" ]; then
     echo -e "##-------------------------------##-------------------------------##"
     make O=out clean &>/dev/null
     make mrproper &>/dev/null
-    rm -rf out/* trimm*.txt anykernel-3/zImage anykernel-3/$(echo *.zip)
+    rm -rf out/* trimm*.txt
     echo -e "##-------------------------------##-------------------------------##"
     echo -e ""
     echo -ne "                              SUCCESS!                              "
