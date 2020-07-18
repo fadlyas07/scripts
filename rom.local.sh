@@ -125,8 +125,8 @@ if [ $choice = "1" ]; then
         build_diff=$(($build_end - $build_start))
         tg_send_message "<b>SELAMAT GAN BUILD SUKSES!</b>"
         curl -F document=@$(echo build.rom.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="
-        ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
-        ⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
+⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
+⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
     fi
   echo -e "Build sukses gan!"
 fi
