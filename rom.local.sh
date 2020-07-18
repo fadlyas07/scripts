@@ -69,7 +69,6 @@ read choice
 
 # Choice 1
 if [ $choice = "1" ]; then
-build_start=$(date +"%s")
 echo -e ""
 echo -e "Pastikan semuanya sudah siap ajg"
 echo -e ""
@@ -82,6 +81,9 @@ else
     echo -e "Build tipe saat ini $BUILD"
 fi
 build_start=$(date +"%s")
+
+. build/envsetup.sh
+
 tg_send_message "
 <code>Build dimulai! ...</code>
 (Gaya banget ajg yang build rom)"
@@ -92,8 +94,6 @@ tg_send_message "
 ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
 📆 : $(TZ=Asia/Jakarta date +'%a, %d %B %G')
 🏫 : Started on $(hostname)"
-
-. build/envsetup.sh
 
 if [[ -z "$CMD" ]]; then
      echo ""
