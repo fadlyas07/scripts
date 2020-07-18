@@ -105,20 +105,20 @@ if [ $choice = "1" ]; then
         echo -e "Masukin CMD build, misal 'mka bacon'"
         read -p "Masukin mka: " MKAA
         export GAS=$MKAA
-        command "$GAS" 2>&1| tee build.rom.log
+        command "$GAS" 2>&1| tee build.log
     fi
 
     if ! [[ -e out/target/product/"$(echo r*)"/"$(echo *-*2020*.zip)" ]]; then
         build_end=$(date +"%s")
         build_diff=$(($build_end - $build_start))
-        grep -iE 'FAILED:' "$(echo build.rom.log)" &> "trimmed_log.txt"
+        grep -iE 'ninja:|FAILED:' "$(echo build.log)" &> "trimmed_log.txt"
         send_to_dogbin=$(echo https://del.dog/$(jq -r .key <<< $(curl -sf --data-binary "$(cat $(echo trimmed_log.txt))" https://del.dog/documents)))
         raw_send_to_dogbin=$(echo https://del.dog/raw/$(jq -r .key <<< $(curl -sf --data-binary "$(cat $(echo trimmed_log.txt))" https://del.dog/documents)))
         curl -F document=@$(echo build.rom.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="
-        ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
-        🔗 : $send_to_dogbin
-        🗒️ : $raw_send_to_dogbin
-        ⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
+⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
+🔗 : $send_to_dogbin
+🗒️ : $raw_send_to_dogbin
+⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
     else
         rm -rf $(pwd)/out/target/product/"$(echo r*)"/"$(echo ota*.zip)"
         build_end=$(date +"%s")
