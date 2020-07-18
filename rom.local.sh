@@ -84,17 +84,6 @@ build_start=$(date +"%s")
 
 . build/envsetup.sh
 
-tg_send_message "
-<code>Build dimulai! ...</code>
-(Gaya banget ajg yang build rom)"
-
-tg_send_message "
-👤 : <a href='https://github.com/$github_name'>@$github_name</a>
-🏷️ : $(cd android && git config --get remote.origin.url)
-⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
-📆 : $(TZ=Asia/Jakarta date +'%a, %d %B %G')
-🏫 : Started on $(hostname)"
-
 if [[ -z "$CMD" ]]; then
      echo ""
      echo -e "Masukin CMD lunch, misal 'lunch ios13_rova-userngebug'"
@@ -109,6 +98,18 @@ if [[ -z $GAS ]]; then
     export GAS=$MKAA
     command "$GAS" 2>&1| tee build.rom.log
 fi
+
+tg_send_message "
+<code>Build dimulai! ...</code>
+(Gaya banget ajg yang build rom)"
+
+tg_send_message "
+👤 : <a href='https://github.com/$github_name'>@$github_name</a>
+🏷️ : $(cd android && git config --get remote.origin.url)
+⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
+📆 : $(TZ=Asia/Jakarta date +'%a, %d %B %G')
+🏫 : Started on $(hostname)"
+
 if ! [[ -e out/target/product/"$(echo r*)"/"$(echo *-*2020*.zip)" ]]; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start))
