@@ -69,114 +69,115 @@ read choice
 
 # Choice 1
 if [ $choice = "1" ]; then
-echo -e ""
-echo -e "Pastikan semuanya sudah siap ajg"
-echo -e ""
-if [[ -z "$BUILD" ]]; then
-    echo ""
-    echo -e "Misal 'UNOFFICIAL' gatau sih work atau engga :v"
-    read -p "Masukin tipe build: " BUILD
-    export CUSTOM_BUILD_TYPE=$BUILD
-else
-    echo -e "Build tipe saat ini $BUILD"
-fi
-build_start=$(date +"%s")
+    echo -e ""
+    echo -e "Pastikan semuanya sudah siap"
+    echo -e ""
+    if [[ -z "$BUILD" ]]; then
+        echo ""
+        echo -e "Misal 'UNOFFICIAL' gatau sih work atau engga :v"
+        read -p "Masukin tipe build: " BUILD
+        export CUSTOM_BUILD_TYPE=$BUILD
+    else
+        echo -e "Build tipe saat ini $BUILD"
+    fi
+    build_start=$(date +"%s")
 
-. build/envsetup.sh
+    . build/envsetup.sh
 
-if [[ -z "$CMD" ]]; then
-     echo ""
-     echo -e "Masukin CMD lunch, misal 'lunch ios13_rova-userngebug'"
-     read -p "Masukin Lunch: " LUNCH
-     export CMD=$LUNCH
-     command "$LUNCH"
-fi
+    if [[ -z "$CMD" ]]; then
+        echo ""
+        echo -e "Masukin CMD lunch, misal 'lunch ios13_rova-userngebug'"
+        read -p "Masukin Lunch: " LUNCH
+        export CMD=$LUNCH
+        command "$LUNCH"
+    fi
 
-tg_send_message "
+    tg_send_message "
 <code>Build dimulai! ...</code>
 (Gaya banget ajg yang build rom)"
 
-tg_send_message "
+    tg_send_message "
 👤 : <a href='https://github.com/$github_name'>@$github_name</a>
 🏷️ : $(cd android && git config --get remote.origin.url)
 ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
 📆 : $(TZ=Asia/Jakarta date +'%a, %d %B %G')
 🏫 : Started on $(hostname)"
 
-if [[ -z $GAS ]]; then
-    echo -e ""
-    echo -e "Masukin CMD build, misal 'mka bacon'"
-    read -p "Masukin mka: " MKAA
-    export GAS=$MKAA
-    command "$GAS" 2>&1| tee build.rom.log
-fi
+    if [[ -z $GAS ]]; then
+        echo -e ""
+        echo -e "Masukin CMD build, misal 'mka bacon'"
+        read -p "Masukin mka: " MKAA
+        export GAS=$MKAA
+        command "$GAS" 2>&1| tee build.rom.log
+    fi
 
-if ! [[ -e out/target/product/"$(echo r*)"/"$(echo *-*2020*.zip)" ]]; then
-    build_end=$(date +"%s")
-    build_diff=$(($build_end - $build_start))
-    tg_send_message "BLOG GOBLOG!"
-    sleep 1
-    tg_send_message "build error gan, gih ngopi dulu"
-    sleep 1
-    grep -iE 'FAILED:' "$(echo build.rom.log)" &> "trimmed_log.txt"
-    send_to_dogbin=$(echo https://del.dog/$(jq -r .key <<< $(curl -sf --data-binary "$(cat $(echo trimmed_log.txt))" https://del.dog/documents)))
-    raw_send_to_dogbin=$(echo https://del.dog/raw/$(jq -r .key <<< $(curl -sf --data-binary "$(cat $(echo trimmed_log.txt))" https://del.dog/documents)))
-    curl -F document=@$(echo build.rom.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="
-    👤 : <a href='https://github.com/$github_name'>@$github_name</a>
-    ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
-    🔗 : $send_to_dogbin
-    🗒️ : $raw_send_to_dogbin
-    ⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
-else
-    rm -rf $(pwd)/out/target/product/"$(echo r*)"/"$(echo ota*.zip)"
-    build_end=$(date +"%s")
-    build_diff=$(($build_end - $build_start))
-    tg_send_message "<b>SELAMAT GAN BUILD SUKSES!</b>"
-    curl -F document=@$(echo build.rom.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="
-    👤 : <a href='https://github.com/$github_name'>@$github_name</a>
-    ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
-    ⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
-fi
-echo -e "Build sukses gan!"
+    if ! [[ -e out/target/product/"$(echo r*)"/"$(echo *-*2020*.zip)" ]]; then
+        build_end=$(date +"%s")
+        build_diff=$(($build_end - $build_start))
+        tg_send_message "BLOG GOBLOG!"
+        sleep 1
+        tg_send_message "build error gan, gih ngopi dulu"
+        sleep 1
+        grep -iE 'FAILED:' "$(echo build.rom.log)" &> "trimmed_log.txt"
+        send_to_dogbin=$(echo https://del.dog/$(jq -r .key <<< $(curl -sf --data-binary "$(cat $(echo trimmed_log.txt))" https://del.dog/documents)))
+        raw_send_to_dogbin=$(echo https://del.dog/raw/$(jq -r .key <<< $(curl -sf --data-binary "$(cat $(echo trimmed_log.txt))" https://del.dog/documents)))
+        curl -F document=@$(echo build.rom.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="
+        👤 : <a href='https://github.com/$github_name'>@$github_name</a>
+        ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
+        🔗 : $send_to_dogbin
+        🗒️ : $raw_send_to_dogbin
+        ⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
+    else
+        rm -rf $(pwd)/out/target/product/"$(echo r*)"/"$(echo ota*.zip)"
+        build_end=$(date +"%s")
+        build_diff=$(($build_end - $build_start))
+        tg_send_message "<b>SELAMAT GAN BUILD SUKSES!</b>"
+        curl -F document=@$(echo build.rom.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="
+        👤 : <a href='https://github.com/$github_name'>@$github_name</a>
+        ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
+        ⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
+    fi
+  echo -e "Build sukses gan!"
 fi
 
 if [ $choice = "2" ]; then
-make O=out clean &>/dev/null
-make mrproper &>/dev/null
-rm -rf out *.log *.txt
+    make O=out clean &>/dev/null
+    make mrproper &>/dev/null
+    rm -rf out *.log *.txt
 fi
 
 if [ $choice = "3" ]; then
-clear
-echo -e "upload rom ke sourceforge"
-echo ""
-echo -e "pastikan lu udah selesai compile"
-echo -e ""
-rm -rf $(pwd)/out/target/product/"$(echo r*)"/"$(echo ota*.zip)"
-if [[ -z $USER ]]; then
+    clear
     echo ""
-    echo "Masukin username sf mu"
-    read -p "Masukkan username: " CI_SF_USER
-    export USER=$CI_SF_USER
-fi
-if [[ -z $PW ]]; then
+    echo -e "upload rom ke sourceforge"
     echo ""
-    echo "Masukin password sf mu"
-    read -p "Masukkan password: " CI_SF_PASS
-    export PW=$CI_SF_PASS
-fi
-if [[ -z $DIR ]]; then
+    echo -e "pastikan lu udah selesai compile"
     echo -e ""
-    echo "Kasih tau dir sf mu, langsung ketik '{project}/blablabla/blavla'"
-    echo "Gausah pake '/home/frs/project' lagi"
-    read -p "Masukkin dir nya: " DIR_SF
-    export DIR=$DIR_SF
-fi
-export READ_ZIP=$(echo *2020*.zip)
-export FILEPATH=$(pwd)/out/target/product/"$(echo r*)"/"$READ_ZIP"
-sshpass -p '$PW' scp "$FILEPATH" $USER@frs.sourceforge.net:/home/frs/project/"$DIR"
-tg_send_message "<code>Mengupload ke sourceforge...</code>
-tg_send_message "
+    rm -rf $(pwd)/out/target/product/"$(echo r*)"/"$(echo ota*.zip)"
+    if [[ -z $USER ]]; then
+        echo ""
+        echo "Masukin username sf mu"
+        read -p "Masukkan username: " CI_SF_USER
+        export USER=$CI_SF_USER
+    fi
+    if [[ -z $PW ]]; then
+        echo ""
+        echo "Masukin password sf mu"
+        read -p "Masukkan password: " CI_SF_PASS
+        export PW=$CI_SF_PASS
+    fi
+    if [[ -z $DIR ]]; then
+        echo -e ""
+        echo "Kasih tau dir sf mu, langsung ketik '{project}/blablabla/blavla'"
+        echo "Gausah pake '/home/frs/project' lagi"
+        read -p "Masukkin dir nya: " DIR_SF
+        export DIR=$DIR_SF
+    fi
+    export READ_ZIP=$(echo *2020*.zip)
+    export FILEPATH=$(pwd)/out/target/product/"$(echo r*)"/"$READ_ZIP"
+    sshpass -p '$PW' scp "$FILEPATH" $USER@frs.sourceforge.net:/home/frs/project/"$DIR"
+    tg_send_message "<code>Mengupload ke sourceforge...</code>"
+    tg_send_message "
 <b>Upload Sukses!!</b>
 🖇️ : $(echo https://sourceforge.net/projects/$DIR/files/$FILEPATH/download)"
 fi
