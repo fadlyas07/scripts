@@ -91,13 +91,6 @@ if [[ -z "$CMD" ]]; then
      export CMD=$LUNCH
      command "$LUNCH"
 fi
-if [[ -z $GAS ]]; then
-    echo -e ""
-    echo -e "Masukin CMD build, misal 'mka bacon'"
-    read -p "Masukin mka: " MKAA
-    export GAS=$MKAA
-    command "$GAS" 2>&1| tee build.rom.log
-fi
 
 tg_send_message "
 <code>Build dimulai! ...</code>
@@ -109,6 +102,14 @@ tg_send_message "
 ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
 📆 : $(TZ=Asia/Jakarta date +'%a, %d %B %G')
 🏫 : Started on $(hostname)"
+
+if [[ -z $GAS ]]; then
+    echo -e ""
+    echo -e "Masukin CMD build, misal 'mka bacon'"
+    read -p "Masukin mka: " MKAA
+    export GAS=$MKAA
+    command "$GAS" 2>&1| tee build.rom.log
+fi
 
 if ! [[ -e out/target/product/"$(echo r*)"/"$(echo *-*2020*.zip)" ]]; then
     build_end=$(date +"%s")
