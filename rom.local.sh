@@ -108,7 +108,7 @@ if [ $choice = "1" ]; then
         command "$GAS" 2>&1| tee build.log
     fi
 
-    if ! [[ -e out/target/product/"$(echo r*)"/"$(echo *-*2020*.zip)" ]]; then
+    if ! [[ -e out/target/product/"$(echo *)"/"$(echo *-*2020*.zip)" ]]; then
         build_end=$(date +"%s")
         build_diff=$(($build_end - $build_start))
         grep -iE 'ninja:|FAILED:' "$(echo build.log)" &> "trimmed_log.txt"
@@ -120,7 +120,7 @@ if [ $choice = "1" ]; then
 🗒️ : $raw_send_to_dogbin
 ⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
     else
-        rm -rf $(pwd)/out/target/product/"$(echo r*)"/"$(echo ota*.zip)"
+        rm -rf $(pwd)/out/target/product/"$(echo *)"/"$(echo ota*.zip)"
         build_end=$(date +"%s")
         build_diff=$(($build_end - $build_start))
         tg_send_message "<b>SELAMAT GAN BUILD SUKSES!</b>"
@@ -144,7 +144,7 @@ if [ $choice = "3" ]; then
     echo ""
     echo -e "pastikan lu udah selesai compile"
     echo -e ""
-    rm -rf $(pwd)/out/target/product/"$(echo r*)"/"$(echo ota*.zip)"
+    rm -rf $(pwd)/out/target/product/"$(echo *)"/"$(echo ota*.zip)"
     if [[ -z $USER ]]; then
         echo ""
         echo "Masukin username sf mu"
@@ -161,11 +161,12 @@ if [ $choice = "3" ]; then
         echo -e ""
         echo "Kasih tau dir sf mu, langsung ketik '{project}/blablabla/blavla'"
         echo "Gausah pake '/home/frs/project' lagi"
+        echo ""
         read -p "Masukkin dir nya: " DIR_SF
         export DIR=$DIR_SF
     fi
     export READ_ZIP=$(echo *2020*.zip)
-    export FILEPATH=$(find $(pwd)/out/target/product/"$(echo r*)"/"$READ_ZIP")
+    export FILEPATH=$(find $(pwd)/out/target/product/"$(echo *)"/"$READ_ZIP")
     sshpass -p '$PW' scp "$FILEPATH" $USER@frs.sourceforge.net:/home/frs/project/"$DIR"
     tg_send_message "<code>Mengupload ke sourceforge...</code>"
     tg_send_message "
