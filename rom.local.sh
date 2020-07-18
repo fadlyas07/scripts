@@ -174,7 +174,7 @@ if [ $choice = "3" ]; then
         export DIR=$DIR_SF
     fi
     export READ_ZIP=$(echo *2020*.zip)
-    export FILEPATH=$(pwd)/out/target/product/"$(echo r*)"/"$READ_ZIP"
+    export FILEPATH=$(find $(pwd)/out/target/product/"$(echo r*)"/"$READ_ZIP")
     sshpass -p '$PW' scp "$FILEPATH" $USER@frs.sourceforge.net:/home/frs/project/"$DIR"
     tg_send_message "<code>Mengupload ke sourceforge...</code>"
     tg_send_message "
