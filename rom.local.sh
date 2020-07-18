@@ -178,7 +178,7 @@ sshpass -p '$PW' scp "$FILEPATH" $USER@frs.sourceforge.net:/home/frs/project/"$D
 tg_send_message "<code>Mengupload ke sourceforge...</code>
 tg_send_message "
 <b>Upload Sukses!!</b>
-🖇️ : $(echo https://sourceforge.net/projects/$DIR/files/CI/$FILEPATH/download)"
+🖇️ : $(echo https://sourceforge.net/projects/$DIR/files/$FILEPATH/download)"
 fi
 
 if [ $choice = "4" ]; then
