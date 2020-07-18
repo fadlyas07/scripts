@@ -163,7 +163,6 @@ if [[ -z $PW ]]; then
     read -p "Masukkan password: " CI_SF_PASS
     export PW=$CI_SF_PASS
 fi
-
 if [[ -z $DIR ]]; then
     echo -e ""
     echo "Kasih tau dir sf mu, langsung ketik '{project}/blablabla/blavla'"
@@ -178,6 +177,7 @@ tg_send_message "<code>Mengupload ke sourceforge...</code>
 tg_send_message "
 <b>Upload Sukses!!</b>
 🖇️ : $(echo https://sourceforge.net/projects/$DIR/files/CI/$FILEPATH/download)"
+fi
 
 if [ $choice = "4" ]; then
     exit 1
