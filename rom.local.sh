@@ -92,13 +92,10 @@ if [ $choice = "1" ]; then
         command "$LUNCH"
     fi
 
-    tg_send_message "
-<code>Build dimulai! ...</code>
-(Gaya banget ajg yang build rom)"
+    tg_send_message "<code>$(echo $CMD) dimulai! ...</code>"
 
     tg_send_message "
 👤 : <a href='https://github.com/$github_name'>@$github_name</a>
-🏷️ : $(cd android && git config --get remote.origin.url)
 ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
 📆 : $(TZ=Asia/Jakarta date +'%a, %d %B %G')
 🏫 : Started on $(hostname)"
@@ -114,15 +111,10 @@ if [ $choice = "1" ]; then
     if ! [[ -e out/target/product/"$(echo r*)"/"$(echo *-*2020*.zip)" ]]; then
         build_end=$(date +"%s")
         build_diff=$(($build_end - $build_start))
-        tg_send_message "BLOG GOBLOG!"
-        sleep 1
-        tg_send_message "build error gan, gih ngopi dulu"
-        sleep 1
         grep -iE 'FAILED:' "$(echo build.rom.log)" &> "trimmed_log.txt"
         send_to_dogbin=$(echo https://del.dog/$(jq -r .key <<< $(curl -sf --data-binary "$(cat $(echo trimmed_log.txt))" https://del.dog/documents)))
         raw_send_to_dogbin=$(echo https://del.dog/raw/$(jq -r .key <<< $(curl -sf --data-binary "$(cat $(echo trimmed_log.txt))" https://del.dog/documents)))
         curl -F document=@$(echo build.rom.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="
-        👤 : <a href='https://github.com/$github_name'>@$github_name</a>
         ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
         🔗 : $send_to_dogbin
         🗒️ : $raw_send_to_dogbin
@@ -133,7 +125,6 @@ if [ $choice = "1" ]; then
         build_diff=$(($build_end - $build_start))
         tg_send_message "<b>SELAMAT GAN BUILD SUKSES!</b>"
         curl -F document=@$(echo build.rom.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="
-        👤 : <a href='https://github.com/$github_name'>@$github_name</a>
         ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
         ⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
     fi
