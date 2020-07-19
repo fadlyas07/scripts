@@ -9,7 +9,7 @@
 export github_name=$(git config user.name)
 export github_email=$(git config user.email)
 
-COMMON_DEPENDENCIES="jq sshpass"
+COMMON_DEPENDENCIES="jq"
 if [ "$(command -v apt-get)" != "" ]; then
     sudo apt-get install -y $COMMON_DEPENDENCIES
 else
@@ -37,9 +37,6 @@ if [ -z $github_name ] && [ -z $github_email ]; then
     git config --global user.name "$USER"
     git config --global user.email "$EMAIL"
 fi
-
-# Regenerate ssh key for sf
-ssh-keyscan frs.sourceforge.net >> ~/.ssh/known_hosts
 
 # print warning for everyone
 clear
