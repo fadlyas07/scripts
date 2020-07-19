@@ -53,7 +53,7 @@ ccache -M 50G
 export ARCH=arm64
 export SUBARCH=arm64
 export USE_CCACHE=1
-export TELEGRAM_ID="-1001323865672"
+export TELEGRAM_ID="784548477"
 export TELEGRAM_TOKEN="1239494557:AAGhiG4ZcBq31-lGgB4u7cy3W_zJ1u8FN9k"
 export CCACHE_COMPRESS=1
 export WITHOUT_CHECK_API=true
@@ -62,9 +62,8 @@ export CCACHE_EXEC=/usr/bin/ccache
 echo -e ""
 echo -e "\n[1] Build rom"
 echo -e "[2] Bersihkan distro"
-echo -e "[3] Upload sourceforge"
-echo -e "[4] Dah lah"
-echo -ne "\n(i) Pilih salah satu ajg [1-5]: "
+echo -e "[3] Dah lah"
+echo -ne "\n(i) Pilih salah satu ajg [1-3]: "
 read choice
 
 # Choice 1
@@ -89,7 +88,7 @@ if [ $choice = "1" ]; then
         echo -e "Masukin CMD lunch, misal 'lunch ios13_rova-userngebug'"
         read -p "Masukin Lunch: " LUNCH
         export CMD=$LUNCH
-        command "$LUNCH"
+        command "$CMD"
     fi
 
     tg_send_message "<code>$(echo $CMD) dimulai! ...</code>"
@@ -108,7 +107,10 @@ if [ $choice = "1" ]; then
         command "$GAS" 2>&1| tee build.log
     fi
 
-    if ! [[ -e out/target/product/"$(echo *)"/"$(echo *-*2020*.zip)" ]]; then
+DEVICE_ROM_DIR=$(echo *)
+FILE_IN_DIR=$(echo *-*20*.zip)
+
+    if ! [[ -e "$(pwd)/out/target/product/$DEVICE_ROM_DIR/$FILE_IN_DIR" ]]; then
         build_end=$(date +"%s")
         build_diff=$(($build_end - $build_start))
         grep -iE 'ninja:|FAILED:' "$(echo build.log)" &> "trimmed_log.txt"
@@ -120,11 +122,12 @@ if [ $choice = "1" ]; then
 🗒️ : $raw_send_to_dogbin
 ⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
     else
-        rm -rf $(pwd)/out/target/product/"$(echo *)"/"$(echo ota*.zip)"
+        rm -rf $(pwd)/$HOME_DIR/out/target/product/"$(echo *)"/"$(echo ota*.zip)"
         build_end=$(date +"%s")
         build_diff=$(($build_end - $build_start))
-        tg_send_message "<b>SELAMAT GAN BUILD SUKSES!</b>"
+        tg_send_message "<b>BUILD SUKSES!...!</b>"
         curl -F document=@$(echo build.rom.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="
+💿 : $(echo $CMD)
 ⏰ : $(date | cut -d' ' -f4) $(date | cut -d' ' -f5) $(date | cut -d' ' -f6)
 ⌛ : $(($build_diff / 60)) menit dan $(($build_diff % 60)) detik."
     fi
@@ -138,43 +141,6 @@ if [ $choice = "2" ]; then
 fi
 
 if [ $choice = "3" ]; then
-    clear
-    echo ""
-    echo -e "upload rom ke sourceforge"
-    echo ""
-    echo -e "pastikan lu udah selesai compile"
-    echo -e ""
-    rm -rf $(pwd)/out/target/product/"$(echo *)"/"$(echo ota*.zip)"
-    if [[ -z $USER ]]; then
-        echo ""
-        echo "Masukin username sf mu"
-        read -p "Masukkan username: " CI_SF_USER
-        export USER=$CI_SF_USER
-    fi
-    if [[ -z $PW ]]; then
-        echo ""
-        echo "Masukin password sf mu"
-        read -p "Masukkan password: " CI_SF_PASS
-        export PW=$CI_SF_PASS
-    fi
-    if [[ -z $DIR ]]; then
-        echo -e ""
-        echo "Kasih tau dir sf mu, langsung ketik '{project}/blablabla/blavla'"
-        echo "Gausah pake '/home/frs/project' lagi"
-        echo ""
-        read -p "Masukkin dir nya: " DIR_SF
-        export DIR=$DIR_SF
-    fi
-    export READ_ZIP=$(echo *2020*.zip)
-    export FILEPATH=$(find $(pwd)/out/target/product/"$(echo *)"/"$READ_ZIP")
-    sshpass -p '$PW' scp "$FILEPATH" $USER@frs.sourceforge.net:/home/frs/project/"$DIR"
-    tg_send_message "<code>Mengupload ke sourceforge...</code>"
-    tg_send_message "
-<b>Upload Sukses!!</b>
-🖇️ : $(echo https://sourceforge.net/projects/$DIR/files/$FILEPATH/download)"
-fi
-
-if [ $choice = "4" ]; then
     exit 1
 fi
 done
