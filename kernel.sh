@@ -87,8 +87,8 @@ case "$(git rev-parse --abbrev-ref HEAD)" in
          PATH=$(pwd)/origin_gcc/bin:$(pwd)/origin_gcc32/bin:"$PATH" \
          make -j$(nproc --all) O="out" \
                                ARCH="arm64" \
-                               CROSS_COMPILE="aarch64-linux-gnu-" \
-                               CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+                               CROSS_COMPILE="aarch64-linux-android-" \
+                               CROSS_COMPILE_ARM32="arm-linux-androideabi-" \
                                KBUILD_BUILD_USER="Mhmmdfdlyas" \
                                KBUILD_BUILD_HOST="$(TZ=Asia/Jakarta date +'%B')-build"
         }
