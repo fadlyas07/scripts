@@ -156,7 +156,7 @@ toolchain_version=$(cat $(pwd)/out/include/generated/compile.h | grep LINUX_COMP
 
 # push everything to channel
 tg_send_sticker
-tg_send_message "⚠️ <i>Warning: New build is available!</i> working on <b>$parse_branch</b> in <b>Linux $kernel_version</b> using <b>$toolchain_version</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> build complete in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
+tg_send_message "⚠️ <i>Warning: New build is available!</i> working on <b>$parse_branch</b> in <b>Linux $kernel_version</b> using <b>$toolchain_version</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> build complete in <b>$(($build_diff / 60)) minutes</b> and <b>$(($build_diff % 60)) seconds</b>."
 if [[ "$device" = "Xiaomi Redmi Note 5A Lite" ]]; then
     curl -F document=@$(echo $pack/$product_name-ugglite-$date1.zip) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID"
 elif [[ "$device" = "Xiaomi Redmi 4A/5A" ]]; then
