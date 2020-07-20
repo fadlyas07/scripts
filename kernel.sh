@@ -93,7 +93,7 @@ case "$(git rev-parse --abbrev-ref HEAD)" in
                                KBUILD_BUILD_HOST="$(TZ=Asia/Jakarta date +'%B')-build"
         }
         ;;
-    "*")
+    *)
         make_kernel()
         {
          export LD_LIBRARY_PATH=$(pwd)/llvm_clang/lib:"$PATH"
