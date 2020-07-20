@@ -10,8 +10,8 @@
 if [[ "$(git rev-parse --abbrev-ref HEAD)" != "lineage-17.1" ]]; then
     [[ ! -d "$(pwd)/tc-clang" ]] && git clone https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 -b master llvm_clang
 else
-    [[ ! -d "$(pwd)/tc-gcc" ]] && https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 -b lineage-17.1 origin_gcc
-    [[ ! -d "$(pwd)/tc-gcc32" ]] && https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 --depth=1 -b lineage-17.1 origin_gcc32
+    [[ ! -d "$(pwd)/tc-gcc" ]] && git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 -b lineage-17.1 origin_gcc
+    [[ ! -d "$(pwd)/tc-gcc32" ]] && git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 --depth=1 -b lineage-17.1 origin_gcc32
 fi
 
 # let see `defconfig` to determine device for compiled
@@ -147,9 +147,9 @@ fi
 cd ..
 
 # continue build if not
-if ! [[ "$device" = "Xiaomi Redmi Note 5A Lite" ]]; then
+if [[ "$device" != "Xiaomi Redmi Note 5A Lite" ]]; then
 # delete output, previous log, and zImage
-rm -rf out/ $temp/*.log $pack/zImage
+rm -rf out $temp $pack/zImage
 
 # `time` mark build (2)
 date2=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
