@@ -149,7 +149,7 @@ cd ..
 # continue build if not
 if [[ "$device" != "Xiaomi Redmi Note 5A Lite" ]]; then
 # delete output, previous log, and zImage
-rm -rf out $temp $pack/zImage
+rm -rf out $temp/*.log $pack/zImage
 
 # `time` mark build (2)
 date2=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
