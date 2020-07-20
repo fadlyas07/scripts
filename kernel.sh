@@ -6,7 +6,7 @@
 
 # clone all preparations if not exist
 [[ ! -d "$(pwd)/anykernel-3" ]] && git clone https://github.com/fadlyas07/anykernel-3 --depth=1
-[[ ! -d "$(pwd)/tc-clang" ]] && git clone https://github.com/fadlyas07/clang-11.0.0 --depth=1 -b master llvm_clang
+[[ ! -d "$(pwd)/tc-clang" ]] && git clone https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 -b master llvm_clang
 [[ ! -d "$(pwd)/telegram" ]] && git clone https://github.com/fabianonline/telegram.sh --depth=1 telegram
 
 # see `defconfig` to determine device for compiled
@@ -40,6 +40,13 @@ case "$parse_branch" in
     ;;
 esac
 export TELEGRAM_ID="$chat_id"
+
+# cchace inflation
+ccache -M 50G
+export USE_CCACHE=1
+export CCACHE_COMPRESS=1
+export WITHOUT_CHECK_API=true
+export CCACHE_EXEC=/usr/bin/ccache
 
 # some other kernel stuff
 pack=$(pwd)/anykernel-3
@@ -80,7 +87,7 @@ make -j$(nproc --all) O=out \
                       CROSS_COMPILE=aarch64-linux-gnu- \
                       CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
                       KBUILD_BUILD_USER=Mhmmdfdlyas \
-                      KBUILD_BUILD_HOST=CIRCLE-CI \
+                      KBUILD_BUILD_HOST=$(TZ=Asia/Jakarta date +'%B')-build \
                       NM=llvm-nm \
                       OBJCOPY=llvm-objcopy \
                       OBJDUMP=llvm-objdump \
@@ -93,7 +100,7 @@ build_start=$(date +"%s")
 date1=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
 
 # build kernel
-make ARCH=arm64 O=out "$config_device1" && \
+make ARCH=arm64 O=out $config_device1
 make_kernel 2>&1| tee Log-$(TZ=Asia/Jakarta date +'%d%m%y').log
 mv Log-*.log "$temp"
 # find errors
@@ -128,7 +135,7 @@ rm -rf out/ $temp/*.log $pack/zImage
 date2=$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')
 
 # build kernel
-make ARCH=arm64 O=out "$config_device2" && \
+make ARCH=arm64 O=out $config_device2
 make_kernel 2>&1| tee Log-$(TZ=Asia/Jakarta date +'%d%m%y').log
 mv Log-*.log "$temp"
 curl -F document=@$(echo $temp/*.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="784548477"
