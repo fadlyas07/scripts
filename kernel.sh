@@ -2,15 +2,19 @@
 # Circle CI/CD - Simple kernel build script
 # Copyright (C) 2019, 2020, Raphielscape (@raphielscape)
 # Copyright (C) 2018, 2019, Akhil Narang (@akhilnarang)
-# Copyright (C) 2020, Mhmmdfdlyas (@fadlyas07)
+# Copyright (C) 2020, Muhammad Fadlyas (@fadlyas07)
 
 # clone all preparations if not exist
 [[ ! -d "$(pwd)/anykernel-3" ]] && git clone https://github.com/fadlyas07/anykernel-3 --depth=1
-[[ ! -d "$(pwd)/tc-clang" ]] && git clone https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 -b master llvm_clang
 [[ ! -d "$(pwd)/telegram" ]] && git clone https://github.com/fabianonline/telegram.sh --depth=1 telegram
+if [[ "$(git rev-parse --abbrev-ref HEAD)" != "lineage-17.1" ]]; then
+    [[ ! -d "$(pwd)/tc-clang" ]] && git clone https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 -b master llvm_clang
+else
+    [[ ! -d "$(pwd)/tc-gcc" ]] && https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 -b lineage-17.1 origin_gcc
+    [[ ! -d "$(pwd)/tc-gcc32" ]] && https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 --depth=1 -b lineage-17.1 origin_gcc32
+fi
 
-# see `defconfig` to determine device for compiled
-parse_branch=$(git rev-parse --abbrev-ref HEAD)
+# let see `defconfig` to determine device for compiled
 config_path="$(pwd)/arch/arm64/configs"
 if [[ -e "$config_path/ugglite_defconfig" ]]; then
     device="Xiaomi Redmi Note 5A Lite" && config_device1=ugglite_defconfig
@@ -33,8 +37,8 @@ export SUBARCH=arm64
 # export `Telegram` Environment
 export TELEGRAM_TOKEN="$token"
 # change chat_id to my_id for `A10` branch
-case "$parse_branch" in
-    A10)
+case "$(git rev-parse --abbrev-ref HEAD)" in
+    "lineage-17.1")
         unset chat_id
         export chat_id="784548477"
     ;;
@@ -76,23 +80,39 @@ tg_send_message()
 }
 
 # Make the kernel
-make_kernel()
-{
-export LD_LIBRARY_PATH=$(pwd)/llvm_clang/lib:$PATH
-PATH=$(pwd)/llvm_clang/bin:$PATH \
-make -j$(nproc --all) O=out \
-                      ARCH=arm64 \
-                      AR=llvm-ar \
-                      CC=clang \
-                      CROSS_COMPILE=aarch64-linux-gnu- \
-                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-                      KBUILD_BUILD_USER=Mhmmdfdlyas \
-                      KBUILD_BUILD_HOST=$(TZ=Asia/Jakarta date +'%B')-build \
-                      NM=llvm-nm \
-                      OBJCOPY=llvm-objcopy \
-                      OBJDUMP=llvm-objdump \
-                      STRIP=llvm-strip
-}
+case "$(git rev-parse --abbrev-ref HEAD)" in
+    "lineage-17.1")
+        make_kernel()
+        {
+         PATH=$(pwd)/origin_gcc/bin:$(pwd)/origin_gcc32/bin:"$PATH" \
+         make -j$(nproc --all) O="out" \
+                               ARCH="arm64" \
+                               CROSS_COMPILE="aarch64-linux-gnu-" \
+                               CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+                               KBUILD_BUILD_USER="Mhmmdfdlyas" \
+                               KBUILD_BUILD_HOST="$(TZ=Asia/Jakarta date +'%B')-build"
+        }
+        ;;
+    "*")
+        make_kernel()
+        {
+         export LD_LIBRARY_PATH=$(pwd)/llvm_clang/lib:"$PATH"
+         PATH=$(pwd)/llvm_clang/bin:"$PATH" \
+         make -j$(nproc --all) O="out" \
+                               ARCH="arm64" \
+                               AR="llvm-ar" \
+                               CC="clang" \
+                               CROSS_COMPILE="aarch64-linux-gnu-" \
+                               CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+                               KBUILD_BUILD_USER="Mhmmdfdlyas" \
+                               KBUILD_BUILD_HOST="$(TZ=Asia/Jakarta date +'%B')-build" \
+                               NM="llvm-nm" \
+                               OBJCOPY="llvm-objcopy" \
+                               OBJDUMP="llvm-objdump" \
+                               STRIP="llvm-strip"
+        }
+        ;;
+esac
 
 # `time` mark started build
 build_start=$(date +"%s")
@@ -114,7 +134,7 @@ if ! [[ -f "$kernel_img" ]]; then
     # ship it all to main channel
     curl -F document=@$(echo $temp/*.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="784548477"
     curl -F document=@$(echo $temp/*.txt) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="$send_to_dogbin"
-    tg_send_message "<b>$product_name</b> for <b>$device</b> on branch '<b>$parse_branch</b>' Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
+    tg_send_message "<b>$product_name</b> for <b>$device</b> on branch '<b>$(git rev-parse --abbrev-ref HEAD)</b>' Build errors in $(($build_diff / 60)) minutes and $(($build_diff % 60)) seconds."
     exit 1
 fi
 curl -F document=@$(echo $temp/*.log) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="784548477"
@@ -156,7 +176,7 @@ toolchain_version=$(cat $(pwd)/out/include/generated/compile.h | grep LINUX_COMP
 
 # push everything to channel
 tg_send_sticker
-tg_send_message "⚠️ <i>Warning: New build is available!</i> working on <b>$parse_branch</b> in <b>Linux $kernel_version</b> using <b>$toolchain_version</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> build complete in <b>$(($build_diff / 60)) minutes</b> and <b>$(($build_diff % 60)) seconds</b>."
+tg_send_message "⚠️ <i>Warning: New build is available!</i> working on <b>$(git rev-parse --abbrev-ref HEAD)</b> in <b>Linux $kernel_version</b> using <b>$toolchain_version</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> build complete in <b>$(($build_diff / 60)) minutes</b> and <b>$(($build_diff % 60)) seconds</b>."
 if [[ "$device" = "Xiaomi Redmi Note 5A Lite" ]]; then
     curl -F document=@$(echo $pack/$product_name-ugglite-$date1.zip) "https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendDocument" -F chat_id="$TELEGRAM_ID"
 elif [[ "$device" = "Xiaomi Redmi 4A/5A" ]]; then
