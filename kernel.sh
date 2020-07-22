@@ -8,6 +8,9 @@ if [[ -n $CI ]] ; then
     if [[ "$(git rev-parse --abbrev-ref HEAD)" == "lineage-17.1" ]] ; then
         [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 -b lineage-17.1 origin_gcc
         [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 --depth=1 -b lineage-17.1 origin_gcc32
+    elif [[ "$(git rev-parse --abbrev-ref HEAD)" == "lineage-hmp" ]] ; then
+        [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://github.com/arter97/arm64-gcc --depth=1 -b master origin_gcc
+        [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://github.com/arter97/arm32-gcc --depth=1 -b master origin_gcc32
     else
         [[ ! -d "$(pwd)/llvm_clang" ]] && git clone https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 -b master llvm_clang
     fi
@@ -16,6 +19,9 @@ else
     if [[ "$(git rev-parse --abbrev-ref HEAD)" == "lineage-17.1" ]] ; then
         [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r58 origin_gcc
         [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r58 origin_gcc32
+    elif [[ "$(git rev-parse --abbrev-ref HEAD)" == "lineage-hmp" ]] ; then
+        [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://github.com/arter97/arm64-gcc --depth=1 -b master origin_gcc
+        [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://github.com/arter97/arm32-gcc --depth=1 -b master origin_gcc32
     else
         [[ ! -d "$(pwd)/llvm_clang" ]] && git clone https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 -b master llvm_clang
     fi
@@ -37,6 +43,15 @@ lineage-17.1)
                                   ARCH=arm64 \
                                   CROSS_COMPILE=aarch64-linux-android- \
                                   CROSS_COMPILE_ARM32=arm-linux-androideabi-
+        }
+        ;;
+lineage-hmp)
+        build_kernel() {
+            PATH=$(pwd)/origin_gcc/bin:$(pwd)/origin_gcc32/bin:"$PATH" \
+            make -j$(nproc --all) O=out \
+                                  ARCH=arm64 \
+                                  CROSS_COMPILE=aarch64-elf- \
+                                  CROSS_COMPILE_ARM32=arm-eabi-
         }
         ;;
 *)
