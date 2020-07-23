@@ -160,9 +160,9 @@ toolchain_version=$(cat $(pwd)/out/include/generated/compile.h | grep LINUX_COMP
 tg_send_sticker
 tg_send_message "⚠️ <i>Warning: New build is available!</i> working on <b>$(git rev-parse --abbrev-ref HEAD)</b> in <b>Linux $kernel_version</b> using <b>$toolchain_version</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> build complete in <b>$(($build_diff / 60)) minutes</b> and <b>$(($build_diff % 60)) seconds</b>."
 if [[ $device == "Xiaomi Redmi Note 5A Lite" ]] ; then
-    curl -F document=@$(echo $pack/$product_name-ugglite-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(ls $pack/*ugglite*.zip) | awk '{print $1}') | <b>md5sum :</b> $(md5sum $(ls $pack/*ugglite*.zip) | awk '{print $1}' )</b>"
+    curl -F document=@$(echo $pack/$product_name-ugglite-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(find $pack/*ugglite*.zip) | awk '{print $1}') | <b>md5sum :</b> $(md5sum $(find $pack/*ugglite*.zip) | awk '{print $1}' )"
 elif [[ $device == "Xiaomi Redmi 4A/5A" ]] ; then
-    curl -F document=@$(echo $pack/$product_name-rolex-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(ls $pack/*rolex*.zip) | awk '{print $1}') | <b>md5sum :</b> $(md5sum $(ls $pack/*rolex*.zip) | awk '{print $1}' )</b>"
-    sleep 2s
-    curl -F document=@$(echo $pack/$product_name-riva-$build_date2.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(ls $pack/*riva*.zip) | awk '{print $1}') | <b>md5sum :</b> $(md5sum $(ls $pack/*riva*.zip) | awk '{print $1}' )</b>"
+    curl -F document=@$(echo $pack/$product_name-rolex-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(find $pack/*rolex*.zip) | awk '{print $1}') | <b>md5sum :</b> $(md5sum $(find $pack/*rolex*.zip) | awk '{print $1}' )"
+    sleep 2
+    curl -F document=@$(echo $pack/$product_name-riva-$build_date2.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(find $pack/*riva*.zip) | awk '{print $1}') | <b>md5sum :</b> "$(md5sum $(find $pack/*riva*.zip) | awk '{print $1}' )"
 fi
