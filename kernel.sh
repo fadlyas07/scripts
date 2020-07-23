@@ -69,7 +69,6 @@ lineage-hmp)
 esac
 
 [[ ! -d "$(pwd)/anykernel-3" ]] && git clone https://github.com/fadlyas07/anykernel-3 --depth=1
-[[ ! -d "$(pwd)/telegram" ]] && git clone https://github.com/fabianonline/telegram.sh --depth=1 telegram
 
 # Needed to export
 export ARCH=arm64
