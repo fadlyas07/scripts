@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 if [[ -n $CI ]] ; then
-    echo "Yeay, build running on CI!"
+    echo "Yeay, build running on CI!" ;
     if [[ "$(git rev-parse --abbrev-ref HEAD)" == "lineage-17.1" ]] ; then
         [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 -b lineage-17.1 origin_gcc
         [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 --depth=1 -b lineage-17.1 origin_gcc32
@@ -15,7 +15,7 @@ if [[ -n $CI ]] ; then
         [[ ! -d "$(pwd)/llvm_clang" ]] && git clone https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 -b master llvm_clang
     fi
 else
-    echo "Okay, build running on my VM"
+    echo "Okay, build running on my VM" ;
     if [[ "$(git rev-parse --abbrev-ref HEAD)" == "lineage-17.1" ]] ; then
         [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r58 origin_gcc
         [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r58 origin_gcc32
@@ -28,9 +28,9 @@ else
 fi
 
 config_path="$(pwd)/arch/arm64/configs"
-if [[ -e "$config_path/ugglite_defconfig" ]]; then
+if [[ -e "$config_path/ugglite_defconfig" ]] ; then
     device="Xiaomi Redmi Note 5A Lite" && config_device1=ugglite_defconfig
-elif [[ -e "$config_path/rolex_defconfig" ]] || [[ -e "$config_path/riva_defconfig" ]]; then
+elif [[ -e "$config_path/rolex_defconfig" ]] || [[ -e "$config_path/riva_defconfig" ]] ; then
     device="Xiaomi Redmi 4A/5A" && config_device1=rolex_defconfig && config_device2=riva_defconfig
 fi
 
@@ -92,7 +92,7 @@ tg_send_message() {
          -d "parse_mode=html" \
          -d chat_id="$TELEGRAM_ID" \
          -d text="$(
-                    for POST in "$@"; do
+                    for POST in "$@" ; do
                         echo "$POST"
                     done
             )"
@@ -128,14 +128,14 @@ fi
 
 curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
 mv "$kernel_img" "$pack/zImage" && cd $pack
-if [[ $device == "Xiaomi Redmi Note 5A Lite" ]]; then
+if [[ $device == "Xiaomi Redmi Note 5A Lite" ]] ; then
     zip -r9q $product_name-ugglite-"$build_date1".zip * -x .git README.md LICENCE $(echo *.zip)
-elif [[ $device == "Xiaomi Redmi 4A/5A" ]]; then
+elif [[ $device == "Xiaomi Redmi 4A/5A" ]] ; then
     zip -r9 $product_name-rolex-"$build_date1".zip * -x .git README.md LICENCE $(echo *.zip)
 fi
 cd ..
 
-if [[ $device != "Xiaomi Redmi Note 5A Lite" ]]; then
+if [[ $device != "Xiaomi Redmi Note 5A Lite" ]] ; then
     rm -rf out "$temp/Log-*.log" "$pack/zImage"
 
     # build kernel
@@ -146,7 +146,7 @@ if [[ $device != "Xiaomi Redmi Note 5A Lite" ]]; then
 
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
     mv "$kernel_img" "$pack/zImage" && cd $pack
-        if [[ $device == "Xiaomi Redmi 4A/5A" ]]; then
+        if [[ $device == "Xiaomi Redmi 4A/5A" ]] ; then
             zip -r9q $product_name-riva-"$build_date2".zip * -x .git README.md LICENCE $(echo *.zip)
         fi
     cd ..
@@ -159,10 +159,10 @@ toolchain_version=$(cat $(pwd)/out/include/generated/compile.h | grep LINUX_COMP
 
 tg_send_sticker
 tg_send_message "⚠️ <i>Warning: New build is available!</i> working on <b>$(git rev-parse --abbrev-ref HEAD)</b> in <b>Linux $kernel_version</b> using <b>$toolchain_version</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> build complete in <b>$(($build_diff / 60)) minutes</b> and <b>$(($build_diff % 60)) seconds</b>."
-if [[ $device == "Xiaomi Redmi Note 5A Lite" ]]; then
-    curl -F document=@$(echo $pack/$product_name-ugglite-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
-elif [[ $device == "Xiaomi Redmi 4A/5A" ]]; then
-    curl -F document=@$(echo $pack/$product_name-rolex-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
-    sleep 2
-    curl -F document=@$(echo $pack/$product_name-riva-$build_date2.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
+if [[ $device == "Xiaomi Redmi Note 5A Lite" ]] ; then
+    curl -F document=@$(echo $pack/$product_name-ugglite-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(ls $pack/*ugglite*.zip) | awk '{print $1}') | <b>md5sum :</b> $(md5sum $(ls $pack/*ugglite*.zip) | awk '{print $1}' )</b>"
+elif [[ $device == "Xiaomi Redmi 4A/5A" ]] ; then
+    curl -F document=@$(echo $pack/$product_name-rolex-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(ls $pack/*rolex*.zip) | awk '{print $1}') | <b>md5sum :</b> $(md5sum $(ls $pack/*rolex*.zip) | awk '{print $1}' )</b>"
+    sleep 2s
+    curl -F document=@$(echo $pack/$product_name-riva-$build_date2.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(ls $pack/*riva*.zip) | awk '{print $1}') | <b>md5sum :</b> $(md5sum $(ls $pack/*riva*.zip) | awk '{print $1}' )</b>"
 fi
