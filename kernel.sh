@@ -5,26 +5,18 @@
 
 if [[ -n $CI ]] ; then
     echo "Yeay, build running on CI!" ;
-    if [[ "$(git rev-parse --abbrev-ref HEAD)" == "lineage-17.1" ]] ; then
-        [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 -b lineage-17.1 origin_gcc
-        [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 --depth=1 -b lineage-17.1 origin_gcc32
-    elif [[ "$(git rev-parse --abbrev-ref HEAD)" == "lineage-hmp" ]] ; then
-        [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://github.com/arter97/arm64-gcc --depth=1 -b master origin_gcc
-        [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://github.com/arter97/arm32-gcc --depth=1 -b master origin_gcc32
-    else
-        [[ ! -d "$(pwd)/llvm_clang" ]] && git clone https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 -b master llvm_clang
-    fi
+        if [[ -z $chat_id ]] && [[ -z $token ]] ; then
+            echo "chat id and bot token are missing, Please input it first!" ;
+            exit 1 ;
+        fi
+    ls -Aq &>/dev/null
 else
     echo "Okay, build running on my VM" ;
-    if [[ "$(git rev-parse --abbrev-ref HEAD)" == "lineage-17.1" ]] ; then
-        [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r58 origin_gcc
-        [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r58 origin_gcc32
-    elif [[ "$(git rev-parse --abbrev-ref HEAD)" == "lineage-hmp" ]] ; then
-        [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://github.com/arter97/arm64-gcc --depth=1 -b master origin_gcc
-        [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://github.com/arter97/arm32-gcc --depth=1 -b master origin_gcc32
-    else
-        [[ ! -d "$(pwd)/llvm_clang" ]] && git clone https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 -b master llvm_clang
-    fi
+        if [[ -z $chat_id ]] && [[ -z $token ]] ; then
+            read -p "Enter your chat_id: " chat_id
+            read -p "Enter your bot token: " token
+        fi
+    ls -Aq &>/dev/null
 fi
 
 config_path="$(pwd)/arch/arm64/configs"
@@ -37,37 +29,43 @@ fi
 case "$(git rev-parse --abbrev-ref HEAD)" in
 lineage-17.1)
         unset chat_id && export chat_id="784548477"
-        build_kernel() {
-            PATH=$(pwd)/origin_gcc/bin:$(pwd)/origin_gcc32/bin:"$PATH" \
-            make -j$(nproc --all) O=out \
-                                  ARCH=arm64 \
-                                  CROSS_COMPILE=aarch64-linux-android- \
-                                  CROSS_COMPILE_ARM32=arm-linux-androideabi-
+        clone_toolchain() {
+        [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 -b lineage-17.1 origin_gcc
+        [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 --depth=1 -b lineage-17.1 origin_gcc32
         }
-        ;;
-lineage-hmp)
         build_kernel() {
-            PATH=$(pwd)/origin_gcc/bin:$(pwd)/origin_gcc32/bin:"$PATH" \
-            make -j$(nproc --all) O=out \
-                                  ARCH=arm64 \
-                                  CROSS_COMPILE=aarch64-elf- \
-                                  CROSS_COMPILE_ARM32=arm-eabi-
+        PATH="$(pwd)/origin_gcc/bin:$(pwd)/origin_gcc32/bin:$PATH" \
+        make "-j$(nproc --all)" O=out \
+                                ARCH=arm64 \
+                                CROSS_COMPILE=aarch64-linux-android- \
+                                CROSS_COMPILE_ARM32=arm-linux-androideabi-
         }
         ;;
 *)
+        clone_toolchain() {
+        [[ ! -d "$(pwd)/llvm_clang" ]] && git clone https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 -b master llvm_clang
+        }
         build_kernel() {
-        export LD_LIBRARY_PATH=$(pwd)/llvm_clang/lib:"$PATH"
-        PATH=$(pwd)/llvm_clang/bin:"$PATH" \
-        make -j$(nproc --all) O=out \
-                              ARCH=arm64 \
-                              CC=clang \
-                              CLANG_TRIPLE=aarch64-linux-gnu- \
-                              CROSS_COMPILE=aarch64-linux-gnu- \
-                              CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+        export CCV="$($(pwd)/llvm_clang/bin/clang --version | head -n1 | perl -pe 's/\(.*?\)//gs' | sed 's/[[:space:]]*$//')" ;
+        export LDV="$($(pwd)/llvm_clang/bin/ld.lld --version | head -n1 | perl -pe 's/\(.*?\)//gs' | sed 's/(compatible with [^)]*)//' | sed 's/[[:space:]]*$//')" ;
+        export LD_LIBRARY_PATH="$(pwd)/llvm_clang/lib:$LD_LIBRARY_PATH" ;
+        PATH="$(pwd)/llvm_clang/bin:$PATH" \
+        make "-j$(nproc --all)" O=out \
+                                ARCH=arm64 \
+                                AR=llvm-ar \
+                                CC=clang \
+                                NM=llvm-nm \
+                                OBJCOPY=llvm-objcopy \
+                                OBJDUMP=llvm-objdump \
+                                STRIP=llvm-strip \
+                                CROSS_COMPILE=aarch64-linux-gnu- \
+                                CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+                                KBUILD_COMPILER_STRING="$CCV, $LDV"
         }
         ;;
 esac
 
+clone_toolchain &>/dev/null
 [[ ! -d "$(pwd)/anykernel-3" ]] && git clone https://github.com/fadlyas07/anykernel-3 --depth=1
 
 # Needed to export
@@ -92,7 +90,7 @@ tg_send_message() {
          -d "parse_mode=html" \
          -d chat_id="$TELEGRAM_ID" \
          -d text="$(
-                    for POST in "$@" ; do
+                    for POST in "${@}" ; do
                         echo "$POST"
                     done
             )"
@@ -108,21 +106,21 @@ kernel_img="$(pwd)/out/arch/arm64/boot/Image.gz-dtb"
 build_start=$(date +"%s")
 build_date1="$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')"
 
-make ARCH=arm64 O=out $config_device1
+make ARCH=arm64 O=out $config_device1 &>/dev/null
 build_kernel 2>&1| tee "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
 mv Log-*.log "$temp"
-# find errors
+
 if [[ ! -f $kernel_img ]] ; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start))
-    # ship log to del.dog & grep errors to trimmed_log.txt
-    grep -iE 'not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $temp/Log-*.log)" &> "$temp/trimmed_log.txt"
-    send_to_dogbin="$(echo https://del.dog/$(jq -r .key <<< $(curl -sf --data-binary "$(cat $(echo $temp/Log-*.log))" https://del.dog/documents)))"
-    # ship document to telegram
+    grep -iE 'Stop|not|empty|in file|waiting|crash|error|fail|fatal' "$(echo $temp/Log-*.log)" &> "$temp/trimmed_log.txt"
+    send_to_dogbin="$(echo https://del.dog/raw/$(jq -r .key <<< $(curl -sf --data-binary "$(cat $temp/Log-*.log)" https://del.dog/documents)))"
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
-    curl -F document=@$(echo $temp/*.txt) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="$send_to_dogbin"
-    # ship error messages to telegram
-    tg_send_message "<b>$product_name</b> for <b>$device</b> on branch '<b>$(git rev-parse --abbrev-ref HEAD)</b>' Build errors in <b>$(($build_diff / 60)) minutes</b> and <b>$(($build_diff % 60)) seconds</b>."
+    curl -F document=@$(echo $temp/*.txt) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
+    tg_send_message "<b>build throw an errors!</b>" \
+                    "<b>Branch :</b> origin/$(git rev-parse --abbrev-ref HEAD) ($(git rev-parse --abbrev-ref HEAD | cut -b 9-15))" \
+                    "<b>Log :</b> $send_to_dogbin" \
+                    "<b>Time elapsed :</b> $(($build_diff / 60)) minutes, $(($build_diff % 60)) seconds."
     exit 1 ;
 fi
 
@@ -131,7 +129,7 @@ mv "$kernel_img" "$pack/zImage" && cd $pack
 if [[ $device == "Xiaomi Redmi Note 5A Lite" ]] ; then
     zip -r9q $product_name-ugglite-"$build_date1".zip * -x .git README.md LICENCE $(echo *.zip)
 elif [[ $device == "Xiaomi Redmi 4A/5A" ]] ; then
-    zip -r9 $product_name-rolex-"$build_date1".zip * -x .git README.md LICENCE $(echo *.zip)
+    zip -r9q $product_name-rolex-"$build_date1".zip * -x .git README.md LICENCE $(echo *.zip)
 fi
 cd ..
 
@@ -140,7 +138,7 @@ if [[ $device != "Xiaomi Redmi Note 5A Lite" ]] ; then
 
     # build kernel
     build_date2="$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')"
-    make ARCH=arm64 O=out $config_device2
+    make ARCH=arm64 O=out $config_device2 &>/dev/null
     build_kernel 2>&1| tee "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
     mv Log-*.log "$temp"
 
@@ -158,11 +156,17 @@ kernel_version=$(cat $(pwd)/out/.config | grep Linux/arm64 | cut -d " " -f3)
 toolchain_version=$(cat $(pwd)/out/include/generated/compile.h | grep LINUX_COMPILER | cut -d '"' -f2)
 
 tg_send_sticker
-tg_send_message "⚠️ <i>Warning: New build is available!</i> working on <b>$(git rev-parse --abbrev-ref HEAD)</b> in <b>Linux $kernel_version</b> using <b>$toolchain_version</b> for <b>$device</b> at commit <b>$(git log --pretty=format:'%s' -1)</b> build complete in <b>$(($build_diff / 60)) minutes</b> and <b>$(($build_diff % 60)) seconds</b>."
+tg_send_message "⚠️ <i>Warning: New build is available!</i>" \
+                "<b>Device :</b> $device" \
+                "<b>Branch :</b> origin/$(git rev-parse --abbrev-ref HEAD) ($(git rev-parse --abbrev-ref HEAD | cut -b 9-15))" \
+                "<b>Kernel version :</b> Linux $kernel_version" \
+                "<b>Compiler :</b> $toolchain_version" \
+                "<b>Latest commit :</b> $(git log --pretty=format:'%s' -1)" \
+                "<b>Time elapsed :</b> $(($build_diff / 60)) minutes, $(($build_diff % 60)) seconds."
 if [[ $device == "Xiaomi Redmi Note 5A Lite" ]] ; then
-    curl -F document=@$(echo $pack/$product_name-ugglite-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(find $pack/*ugglite*.zip) | awk '{print $1}') | <b>md5sum :</b> $(md5sum $(find $pack/*ugglite*.zip) | awk '{print $1}' )"
+    curl -F document=@$(echo $pack/$product_name-ugglite-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
 elif [[ $device == "Xiaomi Redmi 4A/5A" ]] ; then
-    curl -F document=@$(echo $pack/$product_name-rolex-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(find $pack/*rolex*.zip) | awk '{print $1}') | <b>md5sum :</b> $(md5sum $(find $pack/*rolex*.zip) | awk '{print $1}' )"
+    curl -F document=@$(echo $pack/$product_name-rolex-$build_date1.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
     sleep 2
-    curl -F document=@$(echo $pack/$product_name-riva-$build_date2.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="<b>Size :</b> $(du -sh $(find $pack/*riva*.zip) | awk '{print $1}') | <b>md5sum :</b> "$(md5sum $(find $pack/*riva*.zip) | awk '{print $1}' )"
+    curl -F document=@$(echo $pack/$product_name-riva-$build_date2.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID"
 fi
