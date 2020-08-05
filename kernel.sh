@@ -6,7 +6,7 @@
 if [[ -n $CI ]] ; then
     echo "Yeay, build running on CI!" ;
         if [[ -z $chat_id ]] && [[ -z $token ]] ; then
-            echo "chat id and bot token are missing, Please input it first!" ;
+            echo 'chat id and token does not exist!' ;
             exit 1 ;
         fi
     ls -Aq &>/dev/null
@@ -156,8 +156,7 @@ kernel_version=$(cat $(pwd)/out/.config | grep Linux/arm64 | cut -d " " -f3)
 toolchain_version=$(cat $(pwd)/out/include/generated/compile.h | grep LINUX_COMPILER | cut -d '"' -f2)
 
 tg_send_sticker
-tg_send_message "⚠️ <i>Warning: New build is available!</i>" \
-                "<b>Device :</b> $device" \
+tg_send_message "<b>Device :</b> $device" \
                 "<b>Branch :</b> origin/$(git rev-parse --abbrev-ref HEAD) ($(git rev-parse --abbrev-ref HEAD | cut -b 9-15))" \
                 "<b>Kernel version :</b> Linux $kernel_version" \
                 "<b>Compiler :</b> $toolchain_version" \
