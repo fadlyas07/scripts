@@ -43,7 +43,9 @@ lineage-17.1)
         ;;
 *)
         clone_toolchain() {
-        [[ ! -d "$(pwd)/llvm_clang" ]] && git clone https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 -b master llvm_clang
+        [[ ! -d "$(pwd)/llvm_clang" ]] && git clone https://github.com/GreenForce-project-repository/android_vendor_qcom_proprietary_llvm-arm-toolchain-ship_8.0.6 --depth=1 -b 10.0 llvm_clang
+        [[ ! -d "$(pwd)/origin_gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r58 origin_gcc
+        [[ ! -d "$(pwd)/origin_gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r58 origin_gcc32
         }
         build_kernel() {
         export CCV="$($(pwd)/llvm_clang/bin/clang --version | head -n1 | perl -pe 's/\(.*?\)//gs' | sed 's/[[:space:]]*$//')" ;
@@ -52,14 +54,10 @@ lineage-17.1)
         PATH="$(pwd)/llvm_clang/bin:$PATH" \
         make "-j$(nproc --all)" O=out \
                                 ARCH=arm64 \
-                                AR=llvm-ar \
                                 CC=clang \
-                                NM=llvm-nm \
-                                OBJCOPY=llvm-objcopy \
-                                OBJDUMP=llvm-objdump \
-                                STRIP=llvm-strip \
-                                CROSS_COMPILE=aarch64-linux-gnu- \
-                                CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+                                CLANG_TRIPLE=aarch64-linux-gnu- \
+                                CROSS_COMPILE=aarch64-linux-android- \
+                                CROSS_COMPILE_ARM32=arm-linux-androideabi- \
                                 KBUILD_COMPILER_STRING="$CCV, $LDV"
         }
         ;;
