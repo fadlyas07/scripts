@@ -80,7 +80,13 @@ mv Log-*.log $temp
 if [[ ! -f "$kernel_img" ]] ; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start1))
-    grep -iE 'Stop|not|empty|in file|waiting|crash|error|fail|fatal' $(echo $temp/Log-*.log) &> "$temp/trimmed_log.txt"
+    echo -n "=========GENERATING LOGS=========" >> "$temp/trimmed_log.txt"
+    echo "Branch : $(git rev-parse --abbrev-ref HEAD)" >> "$temp/trimmed_log.txt"
+    echo "Commit : $(git log --pretty=format:'%s' -1)" >> "$temp/trimmed_log.txt"
+    echo "Date : $(date)" >> "$temp/trimmed_log.txt"
+    echo -n "==================================" >> "$temp/trimmed_log.txt"
+    grep -iE 'Stop|not|empty|in file|waiting for|crash|error|fail|fatal' $(echo $temp/Log-*.log) &> "$temp/trimmed_log.txt"
+    echo -n "==============DONE================" >> "$temp/trimmed_log.txt"
     send_to_dogbin="$(echo https://del.dog/raw/$(jq -r .key <<< $(curl -sf --data-binary '$(cat $temp/Log-*.log)' https://del.dog/documents)))"
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
     tg_send_message "<b>build throw an errors!</b> ($(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) (Log : $send_to_dogbin) Build took $(($build_diff / 60)) minutes, $(($build_diff % 60)) seconds."
