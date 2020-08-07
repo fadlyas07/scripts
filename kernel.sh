@@ -83,7 +83,7 @@ if [[ ! -f "$kernel_img" ]] ; then
     grep -iE 'Stop|not|empty|in file|waiting|crash|error|fail|fatal' $(echo $temp/Log-*.log) &> "$temp/trimmed_log.txt"
     send_to_dogbin="$(echo https://del.dog/raw/$(jq -r .key <<< $(curl -sf --data-binary '$(cat $temp/Log-*.log)' https://del.dog/documents)))"
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
-    curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F "disable_web_page_preview=true" -F "parse_mode=html" -F caption="<b>build throw an errors!</b> ($(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) (Log : $send_to_dogbin) Build took $(($build_diff / 60)) minutes, $(($build_diff % 60)) seconds."
+    tg_send_message "<b>build throw an errors!</b> ($(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) (Log : $send_to_dogbin) Build took $(($build_diff / 60)) minutes, $(($build_diff % 60)) seconds."
     exit 1 ;
 fi
 
