@@ -19,8 +19,6 @@ else
         fi
     ls -Aq &>/dev/null
 fi
-case '$(git rev-parse --abbrev-ref HEAD)' in *"17.1"*)
-unset chat_id && export chat_id="784548477" ;; esac
 
 config_path="$(pwd)/arch/arm64/configs"
 if [[ -e "$config_path/ugglite_defconfig" ]] ; then
