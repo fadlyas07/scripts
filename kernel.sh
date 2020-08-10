@@ -23,7 +23,7 @@ fi
 config_path="$(pwd)/arch/arm64/configs"
 if [[ -e "$config_path/ugglite_defconfig" ]] ; then
     device=ugglite && config_device1=ugglite_defconfig
-elif [[ -e "$config_path/rolex_defconfig" ]] || [[ -e "$config_path/riva_defconfig" ]] ; then
+elif [[ ( -e "$config_path/rolex_defconfig" || -e "$config_path/riva_defconfig" ) ]] ; then
     device=rova && config_device1=rolex_defconfig && config_device2=riva_defconfig
 fi
 
