@@ -6,12 +6,12 @@
 if [[ -n $CI ]] ; then
     echo "Yeay, build running on CI!" ;
         if [[ -z $chat_id ]] && [[ -z $token ]] ; then
-            echo 'chat id and bot token does not exist!' ;
+            echo 'chat id and bot token is not set or empty.' ;
             exit 1 ;
         fi
     ls -Aq &>/dev/null
 else
-    echo "Okay, build running on my VM" ;
+    echo "Okay, build running on VM!" ;
         if [[ -z $chat_id ]] && [[ -z $token ]] ; then
             read -p "Enter your chat id: " chat_id
             read -p "Enter your bot token: " token
@@ -36,7 +36,7 @@ export ARCH=arm64
 export SUBARCH=arm64
 export TELEGRAM_ID=$chat_id
 export TELEGRAM_TOKEN=$token
-export KBUILD_BUILD_USER=fadlyas
+export KBUILD_BUILD_USER=fadlyas07
 export KBUILD_BUILD_HOST=circleci-Lab
 
 mkdir "$(pwd)/temporary"
@@ -48,14 +48,14 @@ tg_send_message() {
          -d chat_id="$TELEGRAM_ID" \
          -d text="$(
                     for POST in "${@}" ; do
-                        echo "$POST"
+                        echo "${POST}"
                     done
             )" &>/dev/null
 }
 
 build_kernel() {
     PATH="$(pwd)/origin_gcc/bin:$(pwd)/origin_gcc32/bin:$PATH" \
-    make "-j$(nproc --all)" O=out \
+    make -j"$(nproc --all)" O=out \
                             ARCH=arm64 \
                             CROSS_COMPILE=aarch64-linux-android- \
                             CROSS_COMPILE_ARM32=arm-linux-androideabi-
@@ -95,12 +95,12 @@ build_end1=$(date +"%s")
 build_diff1=$(($build_end1 - $build_start1))
 kernel_version="$(cat $(pwd)/out/.config | grep Linux/arm64 | cut -d " " -f3)"
 curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
-mv "$kernel_img" "$pack/zImage" && cd $pack
+mv "$kernel_img" "$pack/zImage" && cd $pack || exit 1 ;
 if [[ "$device" == "ugglite" ]] ; then
-    zip -r9 $product_name-ugglite-"$build_date1".zip * -x .git README.md LICENCE $(echo *.zip) &>/dev/null && cd ..
+    zip -r9 $product_name-ugglite-"$build_date1".zip * -x .git README.md LICENCE $(echo *.zip) &>/dev/null && cd .. || exit 1 ;
     curl -F document=@$(echo $pack/*.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="New #ugglite build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) at commit $(git log --pretty=format:"%h (\"%s\")" -1) Build took $(($build_diff1 / 60)) minutes, $(($build_diff1 % 60)) seconds."
 elif [[ "$device" == "rova" ]] ; then
-    zip -r9 $product_name-rolex-"$build_date1".zip * -x .git README.md LICENCE $(echo *.zip) &>/dev/null && cd ..
+    zip -r9 $product_name-rolex-"$build_date1".zip * -x .git README.md LICENCE $(echo *.zip) &>/dev/null && cd .. || exit 1 ;
     curl -F document=@$(echo $pack/*.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="New #rolex build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) at commit $(git log --pretty=format:"%h (\"%s\")" -1) Build took $(($build_diff1 / 60)) minutes, $(($build_diff1 % 60)) seconds."
 fi
 
@@ -118,9 +118,9 @@ if [[ "$device" != "ugglite" ]] ; then
     build_diff2=$(($build_end2 - $build_start2))
     kernel_version="$(cat $(pwd)/out/.config | grep Linux/arm64 | cut -d " " -f3)"
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
-    mv "$kernel_img" "$pack/zImage" && cd $pack
+    mv "$kernel_img" "$pack/zImage" && cd $pack || exit 1 ;
     if [[ "$device" == "rova" ]] ; then
-        zip -r9 $product_name-riva-"$build_date2".zip * -x .git README.md LICENCE $(echo *.zip) &>/dev/null && cd ..
+        zip -r9 $product_name-riva-"$build_date2".zip * -x .git README.md LICENCE $(echo *.zip) &>/dev/null && cd .. || exit 1 ;
         curl -F document=@$(echo $pack/*.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="New #riva build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) at commit $(git log --pretty=format:"%h (\"%s\")" -1) Build took $(($build_diff2 / 60)) minutes, $(($build_diff2 % 60)) seconds."
     fi
 fi
