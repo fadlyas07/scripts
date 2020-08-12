@@ -78,8 +78,8 @@ mv Log-*.log $temp
 if [[ ! -f "$kernel_img" ]] ; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start1))
-    send_to_dogbin="$(echo https://del.dog/raw/$(jq -r .key <<< $(curl -sf --data-binary $(cat $temp/trimmed_log.txt) https://del.dog/documents)))"
     grep -iE 'Stop|not|empty|in file|waiting|crash|error|fail|fatal' $(echo $temp/Log-*.log) &> "$temp/trimmed_log.txt"
+    send_to_dogbin="$(echo https://del.dog/raw/$(jq -r .key <<< $(curl -sf --data-binary $(cat $temp/trimmed_log.txt) https://del.dog/documents)))"
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
     tg_send_message "<b>build throw an errors!</b> ($(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) (Log : $send_to_dogbin) Build took $(($build_diff / 60)) minutes, $(($build_diff % 60)) seconds."
     exit 1 ;
