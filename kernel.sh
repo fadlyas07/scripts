@@ -67,17 +67,17 @@ temp="$(pwd)/temporary"
 pack="$(pwd)/anykernel-3"
 kernel_img="$(pwd)/out/arch/arm64/boot/Image.gz-dtb"
 
-# build kernel - 1
-build_start1=$(date +"%s")
-build_date1="$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')"
+build_start=$(date +"%s")
 
+# build kernel - 1
+build_date1="$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')"
 make ARCH=arm64 O=out $config_device1 &>/dev/null
 build_kernel 2>&1| tee "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
 mv Log-*.log $temp
 
 if [[ ! -f "$kernel_img" ]] ; then
     build_end=$(date +"%s")
-    build_diff=$(($build_end - $build_start1))
+    build_diff=$(($build_end - $build_start))
     grep -iE 'Stop|not|empty|in file|waiting|crash|error|fail|fatal' $(echo $temp/Log-*.log) &> "$temp/trimmed_log.txt"
     send_to_dogbin="$(echo https://del.dog/raw/$(jq -r .key <<< $(curl -sf --data-binary $(cat $temp/trimmed_log.txt) https://del.dog/documents)))"
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
@@ -85,36 +85,33 @@ if [[ ! -f "$kernel_img" ]] ; then
     exit 1 ;
 fi
 
-build_end1=$(date +"%s")
-build_diff1=$(($build_end1 - $build_start1))
 kernel_version="$(cat $(pwd)/out/.config | grep Linux/arm64 | cut -d " " -f3)"
 curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
 mv "$kernel_img" "$pack/zImage" && cd $pack || exit 1 ;
 if [[ "$device" == "ugglite" ]] ; then
     zip -r9 $product_name-ugglite-"$build_date1".zip * -x .git README.md LICENCE $(echo *.zip) &>/dev/null && cd .. || exit 1 ;
-    curl -F document=@$(echo $pack/*.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="New #ugglite build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) at commit $(git log --pretty=format:"%h (\"%s\")" -1) Build took $(($build_diff1 / 60)) minutes, $(($build_diff1 % 60)) seconds."
+    curl -F chat_id="$TELEGRAM_ID" -F "disable_web_page_preview=true" -F "parse_mode=html" -F document=@"$(echo $pack/*.zip)" "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F caption="
+    New #ugglite build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) at commit $(git log --pretty=format:"%h (\"%s\")" -1) | <b>SHA1:</b> $(sha1sum "$(echo $pack/*.zip)" | awk '{ print $1 }')."
 elif [[ "$device" == "rova" ]] ; then
     zip -r9 $product_name-rolex-"$build_date1".zip * -x .git README.md LICENCE $(echo *.zip) &>/dev/null && cd .. || exit 1 ;
-    curl -F document=@$(echo $pack/*.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="New #rolex build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) at commit $(git log --pretty=format:"%h (\"%s\")" -1) Build took $(($build_diff1 / 60)) minutes, $(($build_diff1 % 60)) seconds."
+    curl -F chat_id="$TELEGRAM_ID" -F "disable_web_page_preview=true" -F "parse_mode=html" -F document=@"$(echo $pack/*.zip)" "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F caption="
+    New #rolex build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) at commit $(git log --pretty=format:"%h (\"%s\")" -1) | <b>SHA1:</b> $(sha1sum "$(echo $pack/*.zip)" | awk '{ print $1 }')."
 fi
 
 if [[ "$device" != "ugglite" ]] ; then
     rm -rf out $pack/*.zip $temp/Log-*.log $pack/zImage
 
     # build kernel - 2
-    build_start2=$(date +"%s")
     build_date2="$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')"
     make ARCH=arm64 O=out $config_device2 &>/dev/null
     build_kernel 2>&1| tee "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
     mv Log-*.log $temp
 
-    build_end2=$(date +"%s")
-    build_diff2=$(($build_end2 - $build_start2))
-    kernel_version="$(cat $(pwd)/out/.config | grep Linux/arm64 | cut -d " " -f3)"
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
     mv "$kernel_img" "$pack/zImage" && cd $pack || exit 1 ;
     if [[ "$device" == "rova" ]] ; then
         zip -r9 $product_name-riva-"$build_date2".zip * -x .git README.md LICENCE $(echo *.zip) &>/dev/null && cd .. || exit 1 ;
-        curl -F document=@$(echo $pack/*.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_ID" -F caption="New #riva build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) at commit $(git log --pretty=format:"%h (\"%s\")" -1) Build took $(($build_diff2 / 60)) minutes, $(($build_diff2 % 60)) seconds."
+        curl -F chat_id="$TELEGRAM_ID" -F "disable_web_page_preview=true" -F "parse_mode=html" -F document=@"$(echo $pack/*.zip)" "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F caption="
+        New #riva build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) at commit $(git log --pretty=format:"%h (\"%s\")" -1) | <b>SHA1:</b> $(sha1sum "$(echo $pack/*.zip)" | awk '{ print $1 }')."
     fi
 fi
