@@ -50,14 +50,14 @@ mv Log-*.log "$temp"
 
 if [[ ! -f "$kernel_img" ]] ; then
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_PRIV"
-    tg_send_message "build throw an errors! ($(git rev-parse --abbrev-ref HEAD | cut -b 9-15))."
+    tg_send_message "build throw an errors!"
     exit 1 ;
 else
     kernel_version="$(cat $(pwd)/out/.config | grep Linux/arm64 | cut -d " " -f3)"
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_PRIV"
     mv "$kernel_img" "$pack/zImage" && cd $pack || exit 1 ;
     zip -r9 $product_name-$codename-"$build_date".zip * -x .git README.md LICENCE $(echo *.zip) &>/dev/null && cd .. || exit 1 ;
-    curl -F chat_id="$TELEGRAM_ID" -F caption="New #$codename build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD | cut -b 9-15)) at commit $(git log --pretty=format:"%h (\"%s\")" -1)." \
+    curl -F chat_id="$TELEGRAM_ID" -F caption="New #$codename build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD)) at commit $(git log --pretty=format:"%h (\"%s\")" -1)." \
          -F "disable_web_page_preview=true" -F "parse_mode=html" \
          -F document=@$(echo $pack/*.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument"
 fi

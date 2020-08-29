@@ -79,7 +79,7 @@ if [[ ! -f "$kernel_img" ]] ; then
     build_end=$(date +"%s")
     build_diff=$(($build_end - $build_start))
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="784548477"
-    tg_send_message "<b>build throw an errors!</b> ($(git rev-parse --abbrev-ref HEAD | cut -b 9-15)), Build took $(($build_diff / 60)) minutes, $(($build_diff % 60)) seconds."
+    tg_send_message "<b>build throw an errors!</b> ($(git rev-parse --abbrev-ref HEAD), Build took $(($build_diff / 60)) minutes, $(($build_diff % 60)) seconds."
     exit 1 ;
 fi
 
