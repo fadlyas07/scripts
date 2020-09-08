@@ -37,44 +37,42 @@ case "$6" in
         [[ ! -d "$(pwd)/gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r59 gcc &>/dev/null
         [[ ! -d "$(pwd)/gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r59 gcc32 &>/dev/null
         ;;
-    # Auto define command for build
-        -sd | -ac )
-          build_command() {
-            export LD_LIBRARY_PATH="$(pwd)/tc-clang/lib:$LD_LIBRARY_PATH" ;
-            PATH="$(pwd)/tc-clang/bin:$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH" \
-            make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
-                                                       ARCH="$ARCH" \
-                                                       CC=clang \
-                                                       CLANG_TRIPLE=aarch64-linux-gnu- \
-                                                       CROSS_COMPILE=aarch64-linux-android- \
-                                                       CROSS_COMPILE_ARM32=arm-linux-androideabi-
-          }
-          ;;
-        -pr | -gf | -az | -av)
-          build_command() {
-            PATH="$(pwd)/tc-clang/bin:$PATH" \
-            make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
-                                                       ARCH="$ARCH" \
-                                                       AR=llvm-ar \
-                                                       CC=clang \
-                                                       NM=llvm-nm \
-                                                       OBJCOPY=llvm-objcopy \
-                                                       OBJDUMP=llvm-objdump \
-                                                       STRIP=llvm-strip \
-                                                       CROSS_COMPILE=aarch64-linux-gnu- \
-                                                       CROSS_COMPILE_ARM32=arm-linux-gnueabi-
-          }
-          ;;
-        *)
-          build_command() {
-            PATH="$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH" \
-            make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
-                                                       ARCH="$ARCH" \
-                                                       CROSS_COMPILE=aarch64-linux-android- \
-                                                       CROSS_COMPILE_ARM32=arm-linux-androideabi-
-          }
-          ;;
 esac
+
+if [[ ( $6 == "-sd" || "-ac" ) ]] ; then
+    build_command() {
+    export LD_LIBRARY_PATH="$(pwd)/tc-clang/lib:$LD_LIBRARY_PATH" ;
+    PATH="$(pwd)/tc-clang/bin:$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH" \
+    make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
+                                               ARCH="$ARCH" \
+                                               CC=clang \
+                                               CLANG_TRIPLE=aarch64-linux-gnu- \
+                                               CROSS_COMPILE=aarch64-linux-android- \
+                                               CROSS_COMPILE_ARM32=arm-linux-androideabi-
+    }
+elif [[ ( $6 == "-pr" || "-gf" | "-az" | "-av" ) ]] ; then
+    build_command() {
+    PATH="$(pwd)/tc-clang/bin:$PATH" \
+    make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
+                                               ARCH="$ARCH" \
+                                               AR=llvm-ar \
+                                               CC=clang \
+                                               NM=llvm-nm \
+                                               OBJCOPY=llvm-objcopy \
+                                               OBJDUMP=llvm-objdump \
+                                               STRIP=llvm-strip \
+                                               CROSS_COMPILE=aarch64-linux-gnu- \
+                                               CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+    }
+else
+    build_command() {
+    PATH="$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH" \
+    make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
+                                               ARCH="$ARCH" \
+                                               CROSS_COMPILE=aarch64-linux-android- \
+                                               CROSS_COMPILE_ARM32=arm-linux-androideabi-
+    }
+fi
 
 # Main Environment
 codename="$1"
