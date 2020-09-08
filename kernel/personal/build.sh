@@ -11,7 +11,6 @@ fi
 
 case "$6" in
 # define toolchain for build
-  shift
     -sd | --sd-clang)
         [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/crdroidmod/android_vendor_qcom_proprietary_llvm-arm-toolchain-ship_6.0.9 --depth=1 tc-clang &>/dev/null
         [[ ! -d "$(pwd)/gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r59 gcc &>/dev/null
@@ -39,7 +38,6 @@ case "$6" in
         [[ ! -d "$(pwd)/gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r59 gcc32 &>/dev/null
         ;;
     # Auto define command for build
-    case "$6" in
         -sd | -ac )
           build_command() {
             export LD_LIBRARY_PATH="$(pwd)/tc-clang/lib:$LD_LIBRARY_PATH" ;
@@ -76,12 +74,10 @@ case "$6" in
                                                        CROSS_COMPILE_ARM32=arm-linux-androideabi-
           }
           ;;
-    esac
 esac
 
 # Main Environment
 codename="$1"
-release_zip="$7"
 product_name='GreenForce'
 temp="$(pwd)/temporary"
 pack="$(pwd)/anykernel-3"
@@ -130,15 +126,14 @@ else
     curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_PRIV"
     mv "$kernel_img" "$pack/zImage" && cd $pack || exit 1 ;
     zip -r9 $product_name-$codename-"$build_date".zip * -x .git README.md LICENCE $(echo *.zip) &>/dev/null && cd .. || exit 1 ;
-    curl -F chat_id="$TELEGRAM_ID" -F caption="New #$codename build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD)) at commit $(git log --pretty=format:"%h (\"%s\")" -1) | <b>SHA1:</b> $(sha1sum "$release_zip" | awk '{ print $1 }')." \
+    curl -F chat_id="$TELEGRAM_ID" -F caption="New #$codename build is available! ($kernel_version, $(git rev-parse --abbrev-ref HEAD)) at commit $(git log --pretty=format:"%h (\"%s\")" -1)" \
          -F "disable_web_page_preview=true" -F "parse_mode=html" \
          -F document=@$(echo $pack/*.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument"
 fi
 
-case "$8" in
-  shift
+case "$7" in
     "yes|Yes|yEs|yeS|YES")
-        rm -rf out $release_zip $pack/zImage $temp/$(echo *.log)
+        rm -rf out $(echo $pack/*.zip) $pack/zImage $temp/$(echo *.log)
         ;;
     "no|No|nO|NO")
         rm -rf $temp/$(echo *.log)
