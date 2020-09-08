@@ -2,36 +2,81 @@
 # Lite kernel compilation script [ Args ]
 # Copyright (C) 2020 Muhammad Fadlyas (fadlyas07)
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Usage : [ codename chat_id defconfig my_id token toolchain (cmd) zip name ]
+# Usage : [ codename chat_id defconfig my_id token toolchain zip name ]
 
-# define toolchain for build
+if [[ $# -eq 0 ]] ; then
+    echo "No parameter specified!"
+  exit 1 ;
+fi
+
 case "$6" in
---sdc | sd-clang)
-    [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/crdroidmod/android_vendor_qcom_proprietary_llvm-arm-toolchain-ship_6.0.9 --depth=1 tc-clang &>/dev/null
-    [[ ! -d "$(pwd)/gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r59 gcc &>/dev/null
-    [[ ! -d "$(pwd)/gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r59 gcc32 &>/dev/null
-    ;;
---ac | aosp-clang)
-    [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/crdroidmod/android_prebuilts_clang_host_linux-x86_clang-6766004 --depth=1 tc-clang &>/dev/null 
-    [[ ! -d "$(pwd)/gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r59 gcc &>/dev/null
-    [[ ! -d "$(pwd)/gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r59 gcc32 &>/dev/null
-    ;;
---pr | proton)
-    [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/kdrag0n/proton-clang --depth=1 tc-clang &>/dev/null
-    ;;
---gf | gf-clang)
-    [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 tc-clang &>/dev/null
-    ;;
---azc | azure)
-    [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/Panchajanya1999/azure-clang --depth=1 tc-clang &>/dev/null
-    ;;
---avc | avalon)
-    [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/Haseo97/Avalon-Clang-11.0.1 --depth=1 tc-clang &>/dev/null
-    ;;
-*)
-    [[ ! -d "$(pwd)/gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r59 gcc &>/dev/null
-    [[ ! -d "$(pwd)/gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r59 gcc32 &>/dev/null
-    ;;
+# define toolchain for build
+  shift
+    -sd | --sd-clang)
+        [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/crdroidmod/android_vendor_qcom_proprietary_llvm-arm-toolchain-ship_6.0.9 --depth=1 tc-clang &>/dev/null
+        [[ ! -d "$(pwd)/gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r59 gcc &>/dev/null
+        [[ ! -d "$(pwd)/gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r59 gcc32 &>/dev/null
+        ;;
+    -ac | --aosp-clang)
+        [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/crdroidmod/android_prebuilts_clang_host_linux-x86_clang-6766004 --depth=1 tc-clang &>/dev/null 
+        [[ ! -d "$(pwd)/gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r59 gcc &>/dev/null
+        [[ ! -d "$(pwd)/gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r59 gcc32 &>/dev/null
+        ;;
+    -pr | --proton-clang)
+        [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/kdrag0n/proton-clang --depth=1 tc-clang &>/dev/null
+        ;;
+    -gf | --gf-clang)
+        [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/GreenForce-project-repository/clang-11.0.0 --depth=1 tc-clang &>/dev/null
+        ;;
+    -az | --azure-clang)
+        [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/Panchajanya1999/azure-clang --depth=1 tc-clang &>/dev/null
+        ;;
+    -av | --avalon-clang)
+        [[ ! -d "$(pwd)/tc-clang" ]] && git clone --single-branch https://github.com/Haseo97/Avalon-Clang-11.0.1 --depth=1 tc-clang &>/dev/null
+        ;;
+    *)
+        [[ ! -d "$(pwd)/gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r59 gcc &>/dev/null
+        [[ ! -d "$(pwd)/gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r59 gcc32 &>/dev/null
+        ;;
+    # Auto define command for build
+    case "$6" in
+        -sd | -ac )
+          build_command() {
+            export LD_LIBRARY_PATH="$(pwd)/tc-clang/lib:$LD_LIBRARY_PATH" ;
+            PATH="$(pwd)/tc-clang/bin:$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH" \
+            make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
+                                                       ARCH="$ARCH" \
+                                                       CC=clang \
+                                                       CLANG_TRIPLE=aarch64-linux-gnu- \
+                                                       CROSS_COMPILE=aarch64-linux-android- \
+                                                       CROSS_COMPILE_ARM32=arm-linux-androideabi-
+          }
+          ;;
+        -pr | -gf | -az | -av)
+          build_command() {
+            PATH="$(pwd)/tc-clang/bin:$PATH" \
+            make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
+                                                       ARCH="$ARCH" \
+                                                       AR=llvm-ar \
+                                                       CC=clang \
+                                                       NM=llvm-nm \
+                                                       OBJCOPY=llvm-objcopy \
+                                                       OBJDUMP=llvm-objdump \
+                                                       STRIP=llvm-strip \
+                                                       CROSS_COMPILE=aarch64-linux-gnu- \
+                                                       CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+          }
+          ;;
+        *)
+          build_command() {
+            PATH="$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH" \
+            make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
+                                                       ARCH="$ARCH" \
+                                                       CROSS_COMPILE=aarch64-linux-android- \
+                                                       CROSS_COMPILE_ARM32=arm-linux-androideabi-
+          }
+          ;;
+    esac
 esac
 
 # Main Environment
@@ -56,6 +101,13 @@ tg_send_message() {
             )" &>/dev/null
 }
 
+# custom compiler name for clang
+if [[ -d "$(pwd)/tc-clang" ]] ; then
+    CCV="$($(pwd)/tc-clang/bin/clang --version | head -n1)"
+    LDV="$($(pwd)/tc-clang/bin/ld.lld --version | head -n1)"
+    export KBUILD_COMPILER_STRING="$CCV with $LDV"
+fi
+
 # Needed to export
 export TELEGRAM_ID="$2"
 export TELEGRAM_TOKEN="$5"
@@ -63,53 +115,6 @@ export TELEGRAM_PRIV="$4"
 export KBUILD_BUILD_USER=fadlyas07
 export KBUILD_BUILD_HOST=circleci-Lab
 
-case "$9" in
--caosp | aosp-clang)
-    build_command() {
-        export LD_LIBRARY_PATH="$(pwd)/tc-clang/lib:$LD_LIBRARY_PATH" ;
-        PATH="$(pwd)/tc-clang/bin:$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH" \
-        make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
-                                                   ARCH="$ARCH" \
-                                                   CC=clang \
-                                                   CLANG_TRIPLE=aarch64-linux-gnu- \
-                                                   CROSS_COMPILE=aarch64-linux-android- \
-                                                   CROSS_COMPILE_ARM32=arm-linux-androideabi-
-    }
-    ;;
--llvm | llvm-clang)
-    build_command() {
-        PATH="$(pwd)/tc-clang/bin:$PATH" \
-        make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
-                                                   ARCH="$ARCH" \
-                                                   AR=llvm-ar \
-                                                   CC=clang \
-                                                   NM=llvm-nm \
-                                                   OBJCOPY=llvm-objcopy \
-                                                   OBJDUMP=llvm-objdump \
-                                                   STRIP=llvm-strip \
-                                                   CROSS_COMPILE=aarch64-linux-gnu- \
-                                                   CROSS_COMPILE_ARM32=arm-linux-gnueabi-
-    }
-    ;;
-*)
-    build_command() {
-        PATH="$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH" \
-        make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
-                                                   ARCH="$ARCH" \
-                                                   CROSS_COMPILE=aarch64-linux-android- \
-                                                   CROSS_COMPILE_ARM32=arm-linux-androideabi-
-    }
-    ;;
-esac
-
-
-# custom compiler name for clang
-if [[ -d "$(pwd)/tc-clang" ]] ; then
-    CCV="$($(pwd)/tc-clang/bin/clang --version | head -n1)"
-    LDV="$($(pwd)/tc-clang/bin/ld.lld --version | head -n1)"
-    export KBUILD_COMPILER_STRING="$CCV with $LDV"
-fi
-    
 echo Build started ... ;
 build_date="$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')"
 make ARCH="$ARCH" O=out "$3" &>/dev/null
@@ -131,13 +136,14 @@ else
 fi
 
 case "$8" in
-"yes|Yes|yEs|yeS|YES")
-    rm -rf out $release_zip $pack/zImage $temp/$(echo *.log)
-    ;;
-"no|No|nO|NO")
-    rm -rf $temp/$(echo *.log)
-    ;;
-*)
-    echo nothing to do, kek! ;
-    ;;
+  shift
+    "yes|Yes|yEs|yeS|YES")
+        rm -rf out $release_zip $pack/zImage $temp/$(echo *.log)
+        ;;
+    "no|No|nO|NO")
+        rm -rf $temp/$(echo *.log)
+        ;;
+    *)
+        echo "nothing to do, kek!"
+        ;;
 esac
