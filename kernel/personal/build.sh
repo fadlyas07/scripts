@@ -50,7 +50,7 @@ if [[ ( $6 == "-sd" || "-ac" ) ]] ; then
                                                CROSS_COMPILE=aarch64-linux-android- \
                                                CROSS_COMPILE_ARM32=arm-linux-androideabi-
     }
-elif [[ ( $6 == "-pr" || "-gf" | "-az" | "-av" ) ]] ; then
+elif [[ ( $6 == "-pr" || "-gf" || "-az" || "-av" ) ]] ; then
     build_command() {
     PATH="$(pwd)/tc-clang/bin:$PATH" \
     make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
