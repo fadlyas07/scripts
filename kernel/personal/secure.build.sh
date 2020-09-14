@@ -64,7 +64,7 @@ else
          -F document=@$(echo $pack/*.zip) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument"
 fi
 
-case "$7" in
+case "$6" in
     "yes|Yes|yEs|yeS|YES")
         rm -rf out $(echo $pack/*.zip) $pack/zImage $temp/$(echo *.log)
         ;;
