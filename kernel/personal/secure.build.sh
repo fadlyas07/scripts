@@ -10,8 +10,8 @@ if [[ $# -eq 0 ]] ; then
 fi
 
 [[ ! -d "$(pwd)/anykernel-3" ]] && git clone https://github.com/fadlyas07/anykernel-3 --depth=1
-[[ ! -d "$(pwd)/gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r59 gcc &>/dev/null
-[[ ! -d "$(pwd)/gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r59 gcc32 &>/dev/null
+[[ ! -d "$(pwd)/gcc" ]] && git clone https://github.com/arter97/arm64-gcc --depth=1 -b master gcc &>/dev/null
+[[ ! -d "$(pwd)/gcc32" ]] && git clone https://github.com/arter97/arm32-gcc --depth=1 -b master gcc32 &>/dev/null
 
 # Main Environment
 codename="$1"
@@ -46,8 +46,8 @@ build_date="$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')"
 make ARCH=arm64 O=out "$3" &>/dev/null
 PATH="$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH" \
 make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
-ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- \
-CROSS_COMPILE_ARM32=arm-linux-androideabi- 2>&1| tee "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
+ARCH=arm64 CROSS_COMPILE=aarch64-elf- \
+CROSS_COMPILE_ARM32=arm-eabi- 2>&1| tee "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
 mv Log-*.log "$temp"
 
 if [[ ! -f "$kernel_img" ]] ; then
