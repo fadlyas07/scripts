@@ -9,8 +9,8 @@ if [[ $# -eq 0 ]] ; then
   exit 1 ;
 fi
 
-[[ ! -d "$(pwd)/anykernel-3" ]] && git clone https://github.com/fadlyas07/anykernel-3 --depth=1
-[[ ! -d "$(pwd)/compiler" ]] && git clone https://github.com/GreenForce-project-repositories/clang-11.0.0 --depth=1 -b master compiler &>/dev/null
+[[ ! -d "$(pwd)/anykernel-3" ]] && git clone --single-branch https://github.com/fadlyas07/anykernel-3 --depth=1
+[[ ! -d "$(pwd)/compiler" ]] && git clone --single-branch https://github.com/kdrag0n/proton-clang --depth=1 compiler &>/dev/null
 
 # Main Environment
 codename="$1"
