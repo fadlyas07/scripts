@@ -48,7 +48,7 @@ make ARCH=arm64 O=out "$3" &>/dev/null
 PATH="$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH" \
 make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
 ARCH=arm64 CROSS_COMPILE=aarch64-elf- \
-CROSS_COMPILE_ARM32=arm-eabi- >> "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
+CROSS_COMPILE_ARM32=arm-eabi- &> "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
 mv Log-*.log "$temp"
 
 if [[ ! -f "$kernel_img" ]] ; then
