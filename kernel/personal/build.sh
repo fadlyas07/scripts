@@ -10,7 +10,7 @@ if [[ $# -eq 0 ]] ; then
 fi
 
 [[ ! -d "$(pwd)/anykernel-3" ]] && git clone https://github.com/fadlyas07/anykernel-3 --depth=1
-[[ ! -d "$(pwd)/compiler" ]] && git clone https://github.com/crdroidmod/android_vendor_qcom_proprietary_llvm-arm-toolchain-ship_6.0.9 --depth=1 compiler &>/dev/null
+[[ ! -d "$(pwd)/snap_clang" ]] && git clone https://github.com/crdroidmod/android_vendor_qcom_proprietary_llvm-arm-toolchain-ship_6.0.9 --depth=1 snap_clang &>/dev/null
 [[ ! -d "$(pwd)/gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r45 gcc &>/dev/null
 [[ ! -d "$(pwd)/gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r45 gcc32 &>/dev/null
 
@@ -42,19 +42,22 @@ export TELEGRAM_PRIV="$4"
 export KBUILD_BUILD_USER=fadlyas07
 export KBUILD_BUILD_HOST=circleci-Lab
 export KBUILD_BUILD_TIMESTAMP=$(TZ=Asia/Jakarta date)
-export LD_LIBRARY_PATH="$(pwd)/compiler/lib:$LD_LIBRARY_PATH"
-export PATH="$(pwd)/compiler/bin:$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH"
+export LD_LIBRARY_PATH="$(pwd)/snap_clang/lib:$LD_LIBRARY_PATH"
 
-# export custom clang version
-CCV="$($(pwd)/compiler/bin/clang --version | head -n1)"
-LDV="$($(pwd)/compiler/bin/ld.lld --version | head -n1)"
-export KBUILD_COMPILER_STRING="$CCV with $LDV"
+# idk what is that.
+CT_PR="aarch64-linux-gnu-"
+CC_PR="$(pwd)/snap_clang/bin/clang"
+GCC_PR="$(pwd)/gcc/bin/aarch64-linux-android-"
+GCC32_PR="$(pwd)/gcc32/bin/arm-linux-androideabi-"
+LDV="$($(pwd)/snap_clang/bin/ld.lld --version | head -n1)"
+CCV="$($(pwd)/snap_clang/bin/clang --version | head -n1)"
 
 build_date="$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')"
 make ARCH=arm64 O=out "$3" &>/dev/null
 make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
-ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- \
-CROSS_COMPILE=aarch64-linux-android- CROSS_COMPILE_ARM32=arm-linux-androideabi- 2>&1| tee "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
+ARCH=arm64 CC=${CC_PR} CLANG_TRIPLE=${CT_PR} \
+CROSS_COMPILE=${GCC_PR} CROSS_COMPILE_ARM32=${GCC32_PR} \
+KBUILD_COMPILER_STRING="$CCV with $LDV" 2>&1| tee "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
 mv Log-*.log "$temp"
 
 if [[ ! -f "$kernel_img" ]] ; then
