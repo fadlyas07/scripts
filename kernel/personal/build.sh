@@ -9,8 +9,10 @@ if [[ $# -eq 0 ]] ; then
   exit 1 ;
 fi
 
-[[ ! -d "$(pwd)/anykernel-3" ]] && git clone --single-branch https://github.com/fadlyas07/anykernel-3 --depth=1
-[[ ! -d "$(pwd)/proton" ]] && git clone --single-branch https://github.com/kdrag0n/proton-clang --depth=1 proton &>/dev/null
+[[ ! -d "$(pwd)/anykernel-3" ]] && git clone https://github.com/fadlyas07/anykernel-3 --depth=1
+[[ ! -d "$(pwd)/compiler" ]] && git clone https://github.com/crdroidmod/android_vendor_qcom_proprietary_llvm-arm-toolchain-ship_6.0.9 --depth=1 compiler &>/dev/null
+[[ ! -d "$(pwd)/gcc" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-9.0.0_r45 gcc &>/dev/null
+[[ ! -d "$(pwd)/gcc32" ]] && git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 --depth=1 -b android-9.0.0_r45 gcc32 &>/dev/null
 
 # Main Environment
 codename="$1"
@@ -40,27 +42,24 @@ export TELEGRAM_PRIV="$4"
 export KBUILD_BUILD_USER=fadlyas07
 export KBUILD_BUILD_HOST=circleci-Lab
 export KBUILD_BUILD_TIMESTAMP=$(TZ=Asia/Jakarta date)
+export LD_LIBRARY_PATH="$(pwd)/compiler/lib:$LD_LIBRARY_PATH"
+export PATH="$(pwd)/compiler/bin:$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH"
 
 # export custom clang version
-export LD="$(pwd)/proton/bin/ld.lld"
-CCV="$($(pwd)/proton/bin/clang --version | head -n1)"
-LDV="$(${LD} --version | head -n1)"
+CCV="$($(pwd)/compiler/bin/clang --version | head -n1)"
+LDV="$($(pwd)/compiler/bin/ld.lld --version | head -n1)"
 export KBUILD_COMPILER_STRING="$CCV with $LDV"
 
 build_date="$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')"
 make ARCH=arm64 O=out "$3" &>/dev/null
-PATH="$(pwd)/proton/bin:$PATH" \
-make -j"$(nproc --all)" O=out \
-                        ARCH=arm64 \
-                        CC=clang \
-                        LD=ld.lld \
-                        CROSS_COMPILE=aarch64-linux-gnu- \
-                        CROSS_COMPILE_ARM32=arm-linux-gnueabi- 2>&1| tee "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
+make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
+ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- \
+CROSS_COMPILE=aarch64-linux-android- CROSS_COMPILE_ARM32=arm-linux-androideabi- >> "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
 mv Log-*.log "$temp"
 
 if [[ ! -f "$kernel_img" ]] ; then
-    curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_PRIV"
     tg_send_message "build throw an errors!"
+    curl -F document=@$(echo $temp/Log-*.log) "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" -F chat_id="$TELEGRAM_PRIV"
     exit 1 ;
 else
     kernel_version="$(cat $(pwd)/out/.config | grep Linux/arm64 | cut -d " " -f3)"
