@@ -54,7 +54,7 @@ build_date="$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')"
 make ARCH=arm64 O=out "$3" &>/dev/null
 make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
 ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- \
-CROSS_COMPILE=aarch64-linux-android- CROSS_COMPILE_ARM32=arm-linux-androideabi- >> "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
+CROSS_COMPILE=aarch64-linux-android- CROSS_COMPILE_ARM32=arm-linux-androideabi- &> "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
 mv Log-*.log "$temp"
 
 if [[ ! -f "$kernel_img" ]] ; then
