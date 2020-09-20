@@ -9,9 +9,8 @@ if [[ $# -eq 0 ]] ; then
   exit 1 ;
 fi
 
-[[ ! -d "$(pwd)/anykernel-3" ]] && git clone https://github.com/fadlyas07/anykernel-3 --depth=1
-[[ ! -d "$(pwd)/gcc" ]] && git clone https://github.com/arter97/arm64-gcc --depth=1 -b master gcc &>/dev/null
-[[ ! -d "$(pwd)/gcc32" ]] && git clone https://github.com/arter97/arm32-gcc --depth=1 -b master gcc32 &>/dev/null
+[[ ! -d "$(pwd)/anykernel-3" ]] && git clone --single-branch https://github.com/fadlyas07/anykernel-3 --depth=1
+[[ ! -d "$(pwd)/proton" ]] && git clone --single-branch https://github.com/kdrag0n/proton-clang --depth=1 proton &>/dev/null
 
 # Main Environment
 codename="$1"
@@ -41,14 +40,22 @@ export TELEGRAM_PRIV="$4"
 export KBUILD_BUILD_USER=fadlyas07
 export KBUILD_BUILD_HOST=circleci-Lab
 export KBUILD_BUILD_TIMESTAMP=$(TZ=Asia/Jakarta date)
-export LD_LIBRARY_PATH="$(pwd)/snap_clang/lib:$LD_LIBRARY_PATH"
+
+# export custom clang version
+export LD="$(pwd)/proton/bin/ld.lld"
+CCV="$($(pwd)/proton/bin/clang --version | head -n1)"
+LDV="$(${LD} --version | head -n1)"
+export KBUILD_COMPILER_STRING="$CCV with $LDV"
 
 build_date="$(TZ=Asia/Jakarta date +'%H%M-%d%m%y')"
 make ARCH=arm64 O=out "$3" &>/dev/null
-PATH="$(pwd)/gcc/bin:$(pwd)/gcc32/bin:$PATH" \
-make -j"$(nproc --all)" -l"$(nproc --all)" O=out \
-ARCH=arm64 CROSS_COMPILE=aarch64-elf- \
-CROSS_COMPILE_ARM32=arm-eabi- &> "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
+PATH="$(pwd)/proton/bin:$PATH" \
+make -j"$(nproc --all)" O=out \
+                        ARCH=arm64 \
+                        CC=clang \
+                        LD=ld.lld \
+                        CROSS_COMPILE=aarch64-linux-gnu- \
+                        CROSS_COMPILE_ARM32=arm-linux-gnueabi- 2>&1| tee "Log-$(TZ=Asia/Jakarta date +'%d%m%y').log"
 mv Log-*.log "$temp"
 
 if [[ ! -f "$kernel_img" ]] ; then
