@@ -11,14 +11,14 @@ export ARCH=arm64 && export SUBARCH=arm64
 trigger_sha="$(git rev-parse HEAD)" && commit_msg="$(git log --pretty=format:'%s' -1)"
 export my_id="$2" && export channel_id="$3" && export token="$4"
 git clone --depth=1 https://github.com/HANA-CI-Build-Project/clang -b dev/10.0 cc_lang
+export KBUILD_BUILD_USER=greenforce-bot && export KBUILD_BUILD_HOST=nightly-build
+make -j$(nproc) ARCH=arm64 O=out ${1}
 export PATH="$(pwd)/cc_lang/bin:$PATH"
 export LD_LIBRARY_PATH="$(pwd)/cc_lang/lib:$LD_LIBRARY_PATH"
-make -j$(nproc) -l$(nproc) ARCH=arm64 O=out CC=clang \
-                           AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy \
-                           OBJDUMP=llvm-objdump CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-                           STRIP=llvm-strip
-export KBUILD_BUILD_USER=greenforce-bot && export KBUILD_BUILD_HOST=nightly-build
-make -j$(nproc) -l$(nproc) ARCH=arm64 O=out ${1} && build_now &> build.log
+make -j$(nproc) ARCH=arm64 O=out CC=clang \
+                AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy \
+                OBJDUMP=llvm-objdump CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+                STRIP=llvm-strip &> build.log
 if [[ ! -f $(pwd)/out/arch/arm64/boot/Image.gz-dtb ]] ; then
     curl -F document=@$(pwd)/build.log "https://api.telegram.org/bot${token}/sendDocument" -F chat_id=${my_id}
     curl -s -X POST "https://api.telegram.org/bot${token}/sendMessage" -d chat_id=${my_id} -d text="Build failed! at branch $(git rev-parse --abbrev-ref HEAD)"
