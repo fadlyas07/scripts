@@ -272,16 +272,16 @@ timeEnd
 statusBuild
 tg_send_document --chat_id "$CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
 
-export FILENAME=$(cd "${OUT}" && find *${BUILDTYPE}*.zip)
+export FILENAME=$(cd "${OUT}" && find *${ROM_NAME}*${ROM_CODENAME}${BUILDTYPE}*.zip)
 export FILEPATH="${OUT}/${FILENAME}"
 if [[ -e "${FILEPATH}" ]]; then
     build_message "Build Success ❤️"
-    [[ ! -e "$(pwd)/gh-release" ]] && curl -Lo "$(pwd)/gh-release" https://github.com/fadlyas07/scripts/raw/master/github/github-release
-    chmod +x "$(pwd)/gh-release"
+    [[ ! -e "${CDIR}/gh-release" ]] && curl -Lo "${CDIR}/gh-release" https://github.com/fadlyas07/scripts/raw/master/github/github-release
+    chmod +x "${CDIR}/gh-release"
     build_message "Uploading ${FILENAME}..."
     build_upload() {
         ./gh-release upload \
-            --security-token "$GH_TOKEN" \
+            --security-token "${GH_TOKEN}" \
             --user "${GitHubUsername}" \
             --repo "${GitHubRepoRelease}" \
             --tag "${GitHubReleaseTag}" \
