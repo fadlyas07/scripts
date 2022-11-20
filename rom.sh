@@ -2,19 +2,19 @@
 # Copyright (C) 2022 Muhammad Fadlyas (fadlyas07)
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-export DEVICE=  # This is codename of your device.
-export ROM_NAME=  # This is for tracking the zip later, see 'vendor/*/config/version.mk' for the correct name.
+export DEVICE=
+export ROM_NAME=
 export BRANCH_MANIFEST=
-export ROM_CODENAME=  # This is for tracking the zip later, see 'vendor/*/config/version.mk' for the correct name.
+export ROM_CODENAME=
 export TG_TOKEN=
 export CHAT_ID=
 export GH_TOKEN=
-export BUILDTYPE=  # This is for tracking the zip later, see 'vendor/*/config/version.mk' for the correct name.
+export BUILDTYPE=
 export LunchCommand="lunch XX_${DEVICE}-userdebug"
 export BuildCommand=
-export GitHubUsername="greenforce-project"  # for upload files on L301
-export GitHubRepoRelease="android_release"  # for upload files on L302
-export GitHubReleaseTag="release"  # for upload files on L303
+export GitHubUsername="greenforce-project"
+export GitHubRepoRelease="android_release"
+export GitHubReleaseTag="release"
 
 if [[ "$DEVICE" == "" ]]; then
     echo "Environment for 'DEVICE' is empty, please set it by editing script!"
@@ -52,18 +52,6 @@ fi
 
 export CDIR=$(pwd)
 export OUT="${CDIR}/out/target/product/${DEVICE}"
-TrackingZip="$(find ${OUT}/*$(date -u +%Y)*.zip)"
-if [[ -e "$TrackingZip" ]]; then
-    echo "[SCRIPT TRACKING]"
-    echo "Hi!"
-    echo "We have detected files with ZIP extensions in ${OUT}"
-    echo "This will avoid the script to upload the correct file in the last step"
-    echo "This will delete directly by typing Y or y.
-    echo ""
-    echo "file: ${TrackingZip}"
-    read -p "Do you want to delete it now? " -n 1 -r
-    [[ $REPLY =~ ^[Yy]$ ]] && rm -rf "${TrackingZip}" || echo "" && echo "Please make sure (atleast) the file is outside of the folder!" && exit 0
-fi
 export DISTRO=$(source /etc/os-release && echo "${PRETTY_NAME}")
 if [[ -d "${CDIR}/ccache" ]]; then
     CCACHE_DIR="${CDIR}/ccache"
@@ -189,9 +177,7 @@ progress() {
     done
     return 0
 }
-
 timeStart
-
 build_message() {
 	if [[ "$CI_MESSAGE_ID" = "" ]]; then
 CI_MESSAGE_ID=$(tg_send_message --chat_id "$CHAT_ID" --text "<b>=== Starting Build ${ROM_NAME} ===</b>
@@ -202,7 +188,7 @@ CI_MESSAGE_ID=$(tg_send_message --chat_id "$CHAT_ID" --text "<b>=== Starting Bui
 <b>Running on:</b> <code>$DISTRO</code>
 <b>Started at</b> <code>$DATE</code>
 
-<b>Status:</b> ${1}" --parse_mode "html" | jq .result.message_id)
+<b>Status:</b> <code>${1}</code>" --parse_mode "html" | jq .result.message_id)
 	else
 tg_edit_message_text --chat_id "$CHAT_ID" --message_id "$CI_MESSAGE_ID" --text "<b>=== Starting Build ${ROM_NAME} ===</b>
 <b>Codename:</b> <code>${ROM_CODENAME} (${BRANCH_MANIFEST})</code>
@@ -212,19 +198,18 @@ tg_edit_message_text --chat_id "$CHAT_ID" --message_id "$CI_MESSAGE_ID" --text "
 <b>Running on:</b> <code>$DISTRO</code>
 <b>Started at</b> <code>$DATE</code>
 
-<b>Status:</b> ${1}" --parse_mode "html"
+<b>Status:</b> <code>${1}</code>" --parse_mode "html"
 	fi
 }
 
 statusBuild() {
     if [[ $retVal -eq 8 ]]; then
-        build_message "<b>Build Aborted 😡 with Code Exit ${retVal}</b>
+        build_message "Build Aborted 😡 with Code Exit ${retVal}.
 
-Total time elapsed: <code>$(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.</code>"
-        tg_send_message --chat_id "$CHAT_ID_SECOND" --text "<b>Build Aborted 💔 with Code Exit ${retVal}</b>
-
+Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds."
+        tg_send_message --chat_id "$CHAT_ID" --text "Build Aborted 💔 with Code Exit ${retVal}.
 Sudah kubilang yang teliti 😡"
-        echo "Build Aborted!"
+        echo "Build Aborted"
         tg_send_document --chat_id "$CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
         LOGTRIM="$CDIR/out/log_trimmed.log"
         sed -n '/FAILED:/,//p' $BUILDLOG &> $LOGTRIM
@@ -232,11 +217,11 @@ Sudah kubilang yang teliti 😡"
         exit $retVal
     fi
     if [[ $retVal -eq 141 ]]; then
-        build_message "<b>Build Aborted 👎 with Code Exit ${retVal}, See the log!</b>
+        build_message "Build Aborted 👎 with Code Exit ${retVal}, See log.
 
-Total time elapsed: <code>$(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.</code>"
+Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds."
         tg_send_message --chat_id "$CHAT_ID_SECOND" --text "Build Aborted 💔 with Code Exit ${retVal}."
-        echo "Build Aborted!"
+        echo "Build Aborted"
         tg_send_document --chat_id "$CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
         LOGTRIM="$CDIR/out/log_trimmed.log"
         sed -n '/FAILED:/,//p' $BUILDLOG &> $LOGTRIM
@@ -244,21 +229,20 @@ Total time elapsed: <code>$(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.
         exit $retVal
     fi
     if [[ $retVal -ne 0 ]]; then
-        build_message "<b>Build Error 💔 with Code Exit ${retVal}, See the log!</b>
+        build_message "Build Error 💔 with Code Exit ${retVal}, See log.
 
-Total time elapsed: <code>$(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.</code>"
+Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds."
         tg_send_message --chat_id "$CHAT_ID_SECOND" --text "Build Error 💔 with Code Exit ${retVal}."
-        echo "Build Error!"
+        echo "Build Error"
         tg_send_document --chat_id "$CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
         LOGTRIM="$CDIR/out/log_trimmed.log"
         sed -n '/FAILED:/,//p' $BUILDLOG &> $LOGTRIM
         tg_send_document --chat_id "$CHAT_ID" --document "$LOGTRIM" --reply_to_message_id "$CI_MESSAGE_ID"
         exit $retVal
     fi
-    build_message "<b>Build success ❤️</b>
-    tg_send_message --chat_id "$CHAT_ID" --text "<b>LOL WTF' Build Success Mate ❤️</b>
-
-<b>Congratsss I'm Happy for you!!</b>"
+    build_message "Build success ❤️"
+    tg_send_message --chat_id "$CHAT_ID" --text "LOL WTF' Build Success Mate ❤️
+Congratsss I'm Happy for you!!"
 }
 
 echo -e ${blu}"CCACHE is enabled for this build"${txtrst}
@@ -266,20 +250,20 @@ export CCACHE_EXEC=$(which ccache)
 export USE_CCACHE=1
 ccache -M 50G
 BUILDLOG="${CDIR}/out/${ROM_NAME}-${DEVICE}-${DATELOG}.log"
-build_message "<code>Prepare for build...</code>"
+build_message "Prepare for build..."
 sleep 2
 . build/envsetup.sh
-build_message "<code>${LunchCommand}</code>"
+build_message "${LunchCommand}"
 command "$LunchCommand"
 mkfifo reading
 tee "$BUILDLOG" < reading &
 if [[ -d "$OUT" ]]; then
-    build_message "<code>Here we go again...🔥</code>"
+    build_message "Here we go again...🔥"
 else
-    build_message "<code>Staring bro...🔥</code>"
+    build_message "Staring bro...🔥"
 fi
 sleep 2
-build_message "<code>🛠️ Building...</code>"
+build_message "🛠️ Building..."
 progress &
 command "$BuildCommand" > reading
 
@@ -288,16 +272,16 @@ timeEnd
 statusBuild
 tg_send_document --chat_id "$CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
 
-export FILENAME=$(cd "${OUT}" && find *${ROM_NAME}*${ROM_CODENAME}${BUILDTYPE}*.zip)
+export FILENAME=$(cd "${OUT}" && find *${BUILDTYPE}*.zip)
 export FILEPATH="${OUT}/${FILENAME}"
 if [[ -e "${FILEPATH}" ]]; then
-    build_message "<code>Build Success ❤️</code>"
-    [[ ! -e "${CDIR}/gh-release" ]] && curl -Lo "${CDIR}/gh-release" https://github.com/fadlyas07/scripts/raw/master/github/github-release
-    chmod +x "${CDIR}/gh-release"
+    build_message "Build Success ❤️"
+    [[ ! -e "$(pwd)/gh-release" ]] && curl -Lo "$(pwd)/gh-release" https://github.com/fadlyas07/scripts/raw/master/github/github-release
+    chmod +x "$(pwd)/gh-release"
     build_message "Uploading ${FILENAME}..."
     build_upload() {
         ./gh-release upload \
-            --security-token "${GH_TOKEN}" \
+            --security-token "$GH_TOKEN" \
             --user "${GitHubUsername}" \
             --repo "${GitHubRepoRelease}" \
             --tag "${GitHubReleaseTag}" \
@@ -307,12 +291,11 @@ if [[ -e "${FILEPATH}" ]]; then
 
     if [[ $(build_upload) == "succes bro!" ]]; then
         LINK=$(echo "https://github.com/greenforce-project/android_release/releases/download/release/${FILENAME}")
-        build_message "<b>Build Complete!</b>
-
-<code>${LINK}</code>"
+        build_message "Build Complete!
+        tg_send_message --chat_id "$CHAT_ID" --reply_to_message_id "$CI_MESSAGE_ID" --text "Link: <code>${LINK}</code>" --parse_mode "html"
     else
-        build_message "<code>Uploading failed...👎</code>"
+        build_message "Uploading failed..."
     fi
 else
-    build_message "<code>Something went wrong to track files...</code>"
+    build_message "Something went wrong to track files..."
 fi
