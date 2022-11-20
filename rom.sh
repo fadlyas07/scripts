@@ -1,99 +1,105 @@
-#!/bin/bash
-
-# Copyright (C) 2019-2020 @alanndz (Telegram and Github)
-# Copyright (C) 2020 @KryPtoN
+#!/usr/bin/env bash
+# Copyright (C) 2022 Muhammad Fadlyas (fadlyas07)
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# use_ccache=
-# YES - use ccache
-# NO - don't use ccache
-# CLEAN - clean your ccache (Do this if you getting Toolchain errors related to ccache and it will take some time to clean all ccache files)
+export DEVICE=  # This is codename of your device.
+export ROM_NAME=  # This is for tracking the zip later, see 'vendor/*/config/version.mk' for the correct name.
+export BRANCH_MANIFEST=
+export ROM_CODENAME=  # This is for tracking the zip later, see 'vendor/*/config/version.mk' for the correct name.
+export TG_TOKEN=
+export CHAT_ID=
+export GH_TOKEN=
+export BUILDTYPE=  # This is for tracking the zip later, see 'vendor/*/config/version.mk' for the correct name.
+export LunchCommand="lunch XX_${DEVICE}-userdebug"
+export BuildCommand=
+export GitHubUsername="greenforce-project"  # for upload files on L301
+export GitHubRepoRelease="android_release"  # for upload files on L302
+export GitHubReleaseTag="release"  # for upload files on L303
 
-# make_clean=
-# YES - make clean (this will delete "out" dir from your ROM repo)
-# NO - make dirty
-# INSTALLCLEAN - make installclean (this will delete all images generated in out dir. useful for rengeneration of images)
-
-# lunch_command
-# LineageOS uses "lunch lineage_devicename-userdebug"
-# AOSP uses "lunch aosp_devicename-userdebug"
-# So enter what your uses in Default Value
-# Example - du, xosp, pa, etc
-
-# device_codename
-# Enter the device codename that you want to build without qoutes
-# Example - "hydrogen" for Mi Max
-# "armani" for Redmi 1S
-
-# build_type
-# userdebug - Like user but with root access and debug capability; preferred for debugging
-# user - Limited access; suited for production
-# eng - Development configuration with additional debugging tools
-
-# target_command
-# bacon - for compiling rom
-# bootimage - for compiling only kernel in ROM Repo
-# Settings, SystemUI for compiling particular APK
-
-# Default setting, uncomment if u havent jenkins
-# use_ccache=yes # yes | no | clean
-# make_clean=yes # yes | no | installclean
-# lunch_command=komodo
-# device_codename=lavender
-# build_type=userdebug
-# target_command=bacon
-# jobs=8
-# upload_to_sf=yes
-device_codename="${1}"
-
-if [[ -d "$(pwd)/ccache" ]]; then
-    path_ccache="$(pwd)/ccache"
+if [[ "$DEVICE" == "" ]]; then
+    echo "Environment for 'DEVICE' is empty, please set it by editing script!"
+    exit 1
+elif [[ "$ROM_NAME" == "" ]]; then
+    echo "Environment for 'ROM_NAME' is empty, please set it by editing script!"
+    exit 1
+elif [[ "$BRANCH_MANIFEST" == "" ]]; then
+    echo "Environment for 'BRANCH_MANIFEST' is empty, please set it by editing script!"
+    exit 1
+elif [[ "$ROM_CODENAME" == "" ]]; then
+    echo "Environment for 'ROM_CODENAME' is empty, please set it by editing script!"
+    exit 1
+elif [[ "$TG_TOKEN" == "" ]]; then
+    echo "Environment for 'TG_TOKEN' is empty, please set it by editing script!"
+    exit 1
+elif [[ "$CHAT_ID" == "" ]]; then
+    echo "Environment for 'CHAT_ID' is empty, please set it by editing script!"
+    exit 1
+elif [[ "$GH_TOKEN" == "" ]]; then
+    echo "Environment for 'GH_TOKEN' is empty, please set it by editing script!"
+    exit 1
+elif [[ "$BUILDTYPE" == "" ]]; then
+    echo "Environment for 'BUILDTYPE' is empty, please set it by editing script!"
+    exit 1
+elif [[ "$LunchCommand" == "" ]]; then
+    echo "Environment for 'LunchCommand' is empty, please set it by editing script!"
+    exit 1
+elif [[ "$BuildCommand" == "" ]]; then
+    echo "Environment for 'BuildCommand' is empty, please set it by editing script!"
+    exit 1
 else
-    path_ccache="$HOME/.ccache"
+    echo "Trust me everything's gonna be alright!"
 fi
 
 export CDIR=$(pwd)
-export OUT="${CDIR}/out/target/product/$device_codename"
-export ROM_NAME="LineageOS"
-export DEVICE="$device_codename"
+export OUT="${CDIR}/out/target/product/${DEVICE}"
+TrackingZip="$(find ${OUT}/*$(date -u +%Y)*.zip)"
+if [[ -e "$TrackingZip" ]]; then
+    echo "[SCRIPT TRACKING]"
+    echo "Hi!"
+    echo "We have detected files with ZIP extensions in ${OUT}"
+    echo "This will avoid the script to upload the correct file in the last step"
+    echo "This will delete directly by typing Y or y.
+    echo ""
+    echo "file: ${TrackingZip}"
+    read -p "Do you want to delete it now? " -n 1 -r
+    [[ $REPLY =~ ^[Yy]$ ]] && rm -rf "${TrackingZip}" || echo "" && echo "Please make sure (atleast) the file is outside of the folder!" && exit 0
+fi
 export DISTRO=$(source /etc/os-release && echo "${PRETTY_NAME}")
-export LINEAGE_BUILDTYPE=EXPERIMENTAL
-export BRANCH_MANIFEST="lineage-20.0"
-
-# my Time
+if [[ -d "${CDIR}/ccache" ]]; then
+    CCACHE_DIR="${CDIR}/ccache"
+else
+    CCACHE_DIR="${HOME}/.ccache"
+fi
+export CCACHE_DIR
 export TZ=":Asia/Jakarta"
 
-# Colors makes things beautiful
 export TERM=xterm
+red=$(tput setaf 1)             #  red
+grn=$(tput setaf 2)             #  green
+blu=$(tput setaf 4)             #  blue
+cya=$(tput setaf 6)             #  cyan
+txtrst=$(tput sgr0)             #  Reset
 
-    red=$(tput setaf 1)             #  red
-    grn=$(tput setaf 2)             #  green
-    blu=$(tput setaf 4)             #  blue
-    cya=$(tput setaf 6)             #  cyan
-    txtrst=$(tput sgr0)             #  Reset
-
-# Time function
-function timeStart() {
+timeStart() {
     DATELOG=$(date "+%H%M-%d%m%Y")
     BUILD_START=$(date +"%s")
     DATE=$(date)
 }
 
-function timeEnd() {
+timeEnd() {
 	BUILD_END=$(date +"%s")
 	DIFF=$(($BUILD_END - $BUILD_START))
 }
 
-# Telegram Function
 telegram_curl() {
     local ACTION=${1}
     shift
     local HTTP_REQUEST=${1}
     shift
-    if [[ "$HTTP_REQUEST" != "POST_FILE" ]]; then
-        curl -s -X $HTTP_REQUEST "https://api.telegram.org/bot$BOT_API_KEY/$ACTION" "$@" | jq .
+    if [[ "${HTTP_REQUEST}" != "POST_FILE" ]]; then
+        curl -s -X "${HTTP_REQUEST}" "https://api.telegram.org/bot$TG_TOKEN/$ACTION" "$@" | jq .
     else
-        curl -s "https://api.telegram.org/bot$BOT_API_KEY/$ACTION" "$@" | jq .
+        curl -s "https://api.telegram.org/bot$TG_TOKEN/$ACTION" "$@" | jq .
     fi
 }
 
@@ -118,25 +124,25 @@ telegram_main() {
         esac
         shift
     done
-    telegram_curl "$ACTION" "$HTTP_REQUEST" "${CURL_ARGUMENTS[@]}"
+    telegram_curl "${ACTION}" "${HTTP_REQUEST}" "${CURL_ARGUMENTS[@]}"
 }
 
 telegram_curl_get() {
     local ACTION=${1}
     shift
-    telegram_main "$ACTION" GET "$@"
+    telegram_main "${ACTION}" GET "$@"
 }
 
 telegram_curl_post() {
     local ACTION=${1}
     shift
-    telegram_main "$ACTION" POST "$@"
+    telegram_main "${ACTION}" POST "$@"
 }
 
 telegram_curl_post_file() {
     local ACTION=${1}
     shift
-    telegram_main "$ACTION" POST_FILE "$@"
+    telegram_main "${ACTION}" POST_FILE "$@"
 }
 
 tg_send_message() {
@@ -151,12 +157,9 @@ tg_send_document() {
     telegram_main sendDocument POST_FILE "$@"
 }
 
-#####
-
-# Progress
-progress(){
+progress() {
     echo "BOTLOG: Build tracker process is running..."
-    sleep 10;
+    sleep 5;
 
     while [ 1 ]; do
         if [[ ${retVal} -ne 0 ]]; then
@@ -182,76 +185,46 @@ progress(){
             fi
         fi
 
-        sleep 10
+        sleep 5
     done
     return 0
 }
 
-#######
-
-# Verify important
-if ! [[ -e "/dev/bot_token" && -n "$BOT_API_KEY" ]]; then
-    echo -e ${cya}"Bot Api not set, please setup first"${txtrst}
-    exit 2
-else
-    if [[ -e "/dev/bot_token" ]]; then
-        BOT_API_KEY=$(cat "/dev/bot_token")
-    fi
-    export BOT_API_KEY
-fi
-
-if ! [[ -e "/dev/chat_id" && -n "$CHAT_ID" ]]; then
-    echo -e ${cya}"Env CHAT_ID not set, please setup first"${txtrst}
-    exit 4
-else
-    if [[ -e "/dev/chat_id" ]]; then
-        CHAT_ID=$(cat "/dev/chat_id")
-    fi
-    export CHAT_ID
-fi
-
-#########
-
-# Build Message
 timeStart
+
 build_message() {
-	if [ "$CI_MESSAGE_ID" = "" ]; then
-CI_MESSAGE_ID=$(tg_send_message --chat_id "$CHAT_ID" --text "<b>====== Starting Build ======</b>
-<b>ROM Name:</b> <code>${ROM_NAME}</code>
-<b>Branch:</b> <code>${BRANCH_MANIFEST}</code>
+	if [[ "$CI_MESSAGE_ID" = "" ]]; then
+CI_MESSAGE_ID=$(tg_send_message --chat_id "$CHAT_ID" --text "<b>=== Starting Build ${ROM_NAME} ===</b>
+<b>Codename:</b> <code>${ROM_CODENAME} (${BRANCH_MANIFEST})</code>
 <b>Device:</b> <code>${DEVICE}</code>
-<b>Type:</b> <code>$LINEAGE_BUILDTYPE</code>
+<b>Build type:</b> <code>${BUILDTYPE}</code>
 <b>Job:</b> <code>$(nproc --all) Paralel processing</code>
 <b>Running on:</b> <code>$DISTRO</code>
 <b>Started at</b> <code>$DATE</code>
 
-<b>Status:</b> $1" --parse_mode "html" | jq .result.message_id)
+<b>Status:</b> ${1}" --parse_mode "html" | jq .result.message_id)
 	else
-tg_edit_message_text --chat_id "$CHAT_ID" --message_id "$CI_MESSAGE_ID" --text "<b>====== Starting Build ======</b>
-<b>ROM Name:</b> <code>${ROM_NAME}</code>
-<b>Branch:</b> <code>${BRANCH_MANIFEST}</code>
+tg_edit_message_text --chat_id "$CHAT_ID" --message_id "$CI_MESSAGE_ID" --text "<b>=== Starting Build ${ROM_NAME} ===</b>
+<b>Codename:</b> <code>${ROM_CODENAME} (${BRANCH_MANIFEST})</code>
 <b>Device:</b> <code>${DEVICE}</code>
-<b>Type:</b> <code>$LINEAGE_BUILDTYPE</code>
+<b>Build type:</b> <code>${BUILDTYPE}</code>
 <b>Job:</b> <code>$(nproc --all) Paralel processing</code>
 <b>Running on:</b> <code>$DISTRO</code>
 <b>Started at</b> <code>$DATE</code>
 
-<b>Status:</b> $1" --parse_mode "html"
+<b>Status:</b> ${1}" --parse_mode "html"
 	fi
 }
 
-##########
-
-# Build status checker
-function statusBuild() {
+statusBuild() {
     if [[ $retVal -eq 8 ]]; then
-        build_message "Build Aborted 😡 with Code Exit ${retVal}.
+        build_message "<b>Build Aborted 😡 with Code Exit ${retVal}</b>
 
-Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds."
-        tg_send_message --chat_id "$CHAT_ID_SECOND" --text "Build Aborted 💔 with Code Exit ${retVal}.
-Check channel for more info.
+Total time elapsed: <code>$(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.</code>"
+        tg_send_message --chat_id "$CHAT_ID_SECOND" --text "<b>Build Aborted 💔 with Code Exit ${retVal}</b>
+
 Sudah kubilang yang teliti 😡"
-        echo "Build Aborted"
+        echo "Build Aborted!"
         tg_send_document --chat_id "$CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
         LOGTRIM="$CDIR/out/log_trimmed.log"
         sed -n '/FAILED:/,//p' $BUILDLOG &> $LOGTRIM
@@ -259,12 +232,11 @@ Sudah kubilang yang teliti 😡"
         exit $retVal
     fi
     if [[ $retVal -eq 141 ]]; then
-        build_message "Build Aborted 👎 with Code Exit ${retVal}, See log.
+        build_message "<b>Build Aborted 👎 with Code Exit ${retVal}, See the log!</b>
 
-Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds."
-        tg_send_message --chat_id "$CHAT_ID_SECOND" --text "Build Aborted 💔 with Code Exit ${retVal}.
-Check channel for more info"
-        echo "Build Aborted"
+Total time elapsed: <code>$(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.</code>"
+        tg_send_message --chat_id "$CHAT_ID_SECOND" --text "Build Aborted 💔 with Code Exit ${retVal}."
+        echo "Build Aborted!"
         tg_send_document --chat_id "$CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
         LOGTRIM="$CDIR/out/log_trimmed.log"
         sed -n '/FAILED:/,//p' $BUILDLOG &> $LOGTRIM
@@ -272,60 +244,75 @@ Check channel for more info"
         exit $retVal
     fi
     if [[ $retVal -ne 0 ]]; then
-        build_message "Build Error 💔 with Code Exit ${retVal}, See log.
+        build_message "<b>Build Error 💔 with Code Exit ${retVal}, See the log!</b>
 
-Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds."
-        tg_send_message --chat_id "$CHAT_ID_SECOND" --text "Build Error 💔 with Code Exit ${retVal}.
-Check channel for more info"
-        echo "Build Error"
+Total time elapsed: <code>$(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.</code>"
+        tg_send_message --chat_id "$CHAT_ID_SECOND" --text "Build Error 💔 with Code Exit ${retVal}."
+        echo "Build Error!"
         tg_send_document --chat_id "$CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
         LOGTRIM="$CDIR/out/log_trimmed.log"
         sed -n '/FAILED:/,//p' $BUILDLOG &> $LOGTRIM
         tg_send_document --chat_id "$CHAT_ID" --document "$LOGTRIM" --reply_to_message_id "$CI_MESSAGE_ID"
         exit $retVal
     fi
-    build_message "Build success ❤️"
-    tg_send_message --chat_id "$CHAT_ID" --text "Build Success ❤️.
-Check channel for more info"
+    build_message "<b>Build success ❤️</b>
+    tg_send_message --chat_id "$CHAT_ID" --text "<b>LOL WTF' Build Success Mate ❤️</b>
+
+<b>Congratsss I'm Happy for you!!</b>"
 }
-
-##############
-
-# CCACHE UMMM!!! Cooks my builds fast
 
 echo -e ${blu}"CCACHE is enabled for this build"${txtrst}
 export CCACHE_EXEC=$(which ccache)
 export USE_CCACHE=1
-export CCACHE_DIR=$path_ccache
 ccache -M 50G
-
-BUILDLOG="$CDIR/out/${ROM_NAME}-${DEVICE}-${DATELOG}.log"
-# time to build bro
-build_message "Staring broo...🔥"
-source build/envsetup.sh
-build_message "breakfast "$device_codename""
-breakfast "$device_codename"
-croot
-mkfifo reading
-tee "${BUILDLOG}" < reading &
-build_message "brunch "$device_codename""
+BUILDLOG="${CDIR}/out/${ROM_NAME}-${DEVICE}-${DATELOG}.log"
+build_message "<code>Prepare for build...</code>"
 sleep 2
-build_message "🛠️ Building..."
+. build/envsetup.sh
+build_message "<code>${LunchCommand}</code>"
+command "$LunchCommand"
+mkfifo reading
+tee "$BUILDLOG" < reading &
+if [[ -d "$OUT" ]]; then
+    build_message "<code>Here we go again...🔥</code>"
+else
+    build_message "<code>Staring bro...🔥</code>"
+fi
+sleep 2
+build_message "<code>🛠️ Building...</code>"
 progress &
-brunch "$device_codename" > reading
+command "$BuildCommand" > reading
 
-# Record exit code after build
 retVal=$?
 timeEnd
 statusBuild
 tg_send_document --chat_id "$CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
 
-# Detecting file
-FILEPATH=$(find "$OUT" -type f -name "${ROM_NAME}*$DEVICE*zip" -printf '%T@ %p\n' | sort -n | tail -1 | cut -f2- -d" ")
-if [[ -e "$FILEPATH" ]]; then
-    build_message "Build Success ❤️"
-    exit 0
+export FILENAME=$(cd "${OUT}" && find *${ROM_NAME}*${ROM_CODENAME}${BUILDTYPE}*.zip)
+export FILEPATH="${OUT}/${FILENAME}"
+if [[ -e "${FILEPATH}" ]]; then
+    build_message "<code>Build Success ❤️</code>"
+    [[ ! -e "${CDIR}/gh-release" ]] && curl -Lo "${CDIR}/gh-release" https://github.com/fadlyas07/scripts/raw/master/github/github-release
+    chmod +x "${CDIR}/gh-release"
+    build_message "Uploading ${FILENAME}..."
+    build_upload() {
+        ./gh-release upload \
+            --security-token "${GH_TOKEN}" \
+            --user "${GitHubUsername}" \
+            --repo "${GitHubRepoRelease}" \
+            --tag "${GitHubReleaseTag}" \
+            --name "${FILENAME}" \
+            --file "${FILEPATH}" && echo "succes bro!"
+    }
+
+    if [[ $(build_upload) == "succes bro!" ]]; then
+        LINK=$(echo "https://github.com/greenforce-project/android_release/releases/download/release/${FILENAME}")
+        build_message "<b>Build Complete!</b>
+
+<code>${LINK}</code>"
+    else
+        build_message "<code>Uploading failed...👎</code>"
+    fi
 else
-    build_message "Gatau gelap"
+    build_message "<code>Something went wrong to track files...</code>"
 fi
-exit 0
