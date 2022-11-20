@@ -3,6 +3,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 echo "PERINGATAN: Pastikan setidaknya ada 1 file dan 1 commit dalam repository Anda."
+if [[ $# -eq 0 ]]; then
+    echo "Tidak ada parameter yang ditentukan!"
+    exit 1
+fi
 
 # Cara Menggunakan Skrip
 # 1. (Jika belum) Unduh skrip menggunakan perintah `wget https://github.com/fadlyas07/scripts/raw/master/upload.sh`
@@ -62,7 +66,6 @@ if [[ -e "${TempatFile}" && -e "${GitHubRilis}" ]]; then
             BuatRilisTag || echo "Tag sudah dibuat, lanjut mengunggah ${NamaFile}..."
         fi
     fi
-
     if [[ $(UnggahFile) == "GAGAL Mengupload file, periksa kembali!" ]]; then
         if ! [[ -f "${GitHubRilis}" ]]; then
             echo "File github-release tidak ditemukan, tolong periksa kembali..." && exit
