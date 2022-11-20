@@ -272,7 +272,7 @@ timeEnd
 statusBuild
 tg_send_document --chat_id "$CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
 
-export FILENAME=$(cd "${OUT}" && find *${ROM_NAME}*${ROM_CODENAME}${BUILDTYPE}*.zip)
+export FILENAME=$(cd "${OUT}" && find ${ROM_NAME}*${ROM_CODENAME}*${BUILDTYPE}*.zip)
 export FILEPATH="${OUT}/${FILENAME}"
 if [[ -e "${FILEPATH}" ]]; then
     build_message "Build Success ❤️"
