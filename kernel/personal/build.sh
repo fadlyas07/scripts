@@ -34,14 +34,11 @@ if [[ -z "${codename}" ]]; then
     exit 1
 fi
 export kernelversion="$VERSION.$PATCHLEVEL"
-export defconfig="vendor/${codename}-perf_defconfig"
-for version in 3.18 4.4 4.9 4.14; do
+for version in 3.18 4.4 4.9; do
     if [[ "$version" == "${kernelversion}" ]]; then
-        case "${kernelversion}" in
-            3.18 | 4.4 | 4.9)
-                export defconfig="${codename}-perf_defconfig"
-                ;;
-        esac
+        export defconfig="${codename}-perf_defconfig"
+    else
+        export defconfig="vendor/${codename}-perf_defconfig"
     fi
 done
 export PATH="${DIR}/greenforce_clang/bin:${DIR}/gcc-arm64/bin:${PATH}"
