@@ -17,7 +17,6 @@ wget https://github.com/greenforce-project/greenforce_clang/raw/main/latest_url.
 [[ ! -d "${DIR}/greenforce_clang" ]] && mkdir -p "${DIR}/greenforce_clang" &&
     wget -c "$latest_url" -O - | tar --use-compress-program=unzstd -xf - -C "${DIR}/greenforce_clang" &>/dev/null
 [[ ! -d "${DIR}/gcc-arm64" ]] && git clone --single-branch https://github.com/greenforce-project/gcc-arm64.git -b main --depth=1 &>/dev/null
-[[ ! -d "${DIR}/gcc-arm" ]] && git clone --single-branch https://github.com/greenforce-project/gcc-arm.git -b main --depth=1 &>/dev/null
 echo "All dependencies cloned!"
 export ARCH=arm64
 export TZ=Asia/Jakarta
@@ -38,18 +37,16 @@ export kernelversion="$VERSION.$PATCHLEVEL"
 export defconfig="vendor/${codename}-perf_defconfig"
 for version in 3.18 4.4 4.9 4.14; do
     if [[ "$version" == "${kernelversion}" ]]; then
-        export vdso_flags="CROSS_COMPILE_COMPAT"
         case "${kernelversion}" in
             3.18 | 4.4 | 4.9)
                 export defconfig="${codename}-perf_defconfig"
-                export vdso_flags="CROSS_COMPILE_ARM32"
                 ;;
         esac
     fi
 done
-export PATH="${DIR}/aosp_clang/bin:${DIR}/aarch64-linux-android-4.9/bin:${DIR}/arm-linux-androideabi-4.9/bin:${PATH}"
+export PATH="${DIR}/greenforce_clang/bin:${DIR}/gcc-arm64/bin:${PATH}"
 export IMG_PATH="${DIR}/out/arch/$ARCH/boot"
-build_flags="ARCH=$ARCH CC=clang CROSS_COMPILE=aarch64-linux-gnu- ${vdso_flags}=arm-linux-gnueabi- "
+build_flags="ARCH=$ARCH CC=clang CROSS_COMPILE=aarch64-linux-gnu- "
 build_flags+="AR=llvm-ar OBJDUMP=llvm-objdump STRIP=llvm-strip NM=llvm-nm "
 [[ "${3}" == llvm || "${3}" == full ]] && build_flags+="LLVM=1 "
 echo "Regenerating ${defconfig}..."
